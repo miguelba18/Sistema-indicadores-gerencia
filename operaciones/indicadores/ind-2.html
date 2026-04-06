@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Indicador 2 – Cumplimiento presupuestos</title>
+  <link rel="stylesheet" href="../../area-base.css">
+  <style>
+    :root { --area-color: #1565c0; --area-color-rgb: 21, 101, 192; }
+    body { background: #f0f5ff; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 12.5px; color: #222; margin: 0; }
+
+    .ind-header {
+      background: var(--area-color); color: #fff;
+      padding: 10px 18px;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .ind-num   { background: rgba(255,255,255,.2); font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 10px; flex-shrink: 0; }
+    .ind-title { font-size: 13px; font-weight: 600; flex: 1; }
+    .ind-peso  { font-size: 12px; color: rgba(255,255,255,.75); flex-shrink: 0; }
+
+    .periodo-bar {
+      background: #dce8f5; padding: 5px 18px;
+      font-size: 11.5px; color: #1a3a5c;
+      border-bottom: 1px solid #b8cfe8;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .periodo-tag {
+      background: var(--area-color); color: #fff;
+      font-size: 10.5px; font-weight: 700;
+      padding: 1px 9px; border-radius: 10px;
+    }
+
+    .nota-anual {
+      font-size: 10.5px; color: #6b7e96; font-style: italic;
+      padding: 6px 18px 2px;
+    }
+
+    .tbl-wrap { padding: 10px 18px 4px; overflow-x: auto; }
+
+    table.ind-tabla {
+      width: 100%; border-collapse: collapse;
+      min-width: 1020px; font-size: 12px;
+    }
+
+    .ind-tabla th {
+      background: var(--area-color); color: #fff;
+      padding: 7px 8px; text-align: center;
+      border: 1px solid rgba(255,255,255,.25);
+      font-weight: 600; font-size: 11px; line-height: 1.35;
+    }
+
+    .ind-tabla td {
+      border: 1px solid #c5d5e8;
+      padding: 5px 7px;
+      vertical-align: middle;
+    }
+
+    /* Alternado por contrato (grupo de 3 filas) */
+    tr.grp-even td { background: #fff; }
+    tr.grp-odd  td { background: #f0f5ff; }
+
+    /* Celdas estáticas */
+    .td-formula {
+      background: #e8edf5 !important;
+      font-size: 10.5px; font-style: italic;
+      color: #374151; text-align: center;
+      width: 150px; line-height: 1.45;
+    }
+    .td-soporte {
+      background: #eef4fc !important;
+      font-size: 11px; color: #374151; text-align: center;
+      min-width: 150px;
+    }
+    .td-soporte textarea {
+      width: 100%; min-height: 80px; resize: vertical;
+      border: 1px solid #c5d5e8; border-radius: 4px;
+      padding: 4px 6px; font-size: 11px; font-family: inherit;
+      background: #fff; color: #222; box-sizing: border-box;
+    }
+
+    /* Nombre de contrato */
+    .td-nombre { min-width: 140px; }
+    .inp-nombre {
+      width: 100%; box-sizing: border-box;
+      border: 1px solid #c5d5e8; border-radius: 4px;
+      padding: 4px 6px; font-size: 11.5px; background: #fff;
+      font-weight: 600;
+    }
+
+    /* Meta */
+    .inp-meta {
+      width: 48px; text-align: center;
+      border: 1px solid #c5d5e8; border-radius: 4px;
+      padding: 4px 5px; font-size: 12px; background: #fff;
+      -moz-appearance: textfield; appearance: textfield;
+    }
+    .inp-meta::-webkit-inner-spin-button { display: none; }
+
+    /* Sub-fila nombre */
+    .td-sub { font-size: 11.5px; font-weight: 600; color: #4b6080; min-width: 70px; }
+
+    /* Inputs monetarios */
+    .inp-money {
+      width: 100%; box-sizing: border-box; text-align: right;
+      border: 1px solid #c5d5e8; border-radius: 4px;
+      padding: 4px 6px; font-size: 12px; background: #fff;
+    }
+    .td-money { min-width: 130px; }
+
+    /* Resultado */
+    .td-resultado { text-align: center; font-weight: 700; font-size: 13px; min-width: 70px; white-space: nowrap; }
+    .td-resultado.cumple    { background: #d4edda !important; color: #155724; }
+    .td-resultado.no-cumple { background: #f8d7da !important; color: #721c24; }
+    .res-val   { font-size: 13px; font-weight: 700; }
+    .res-label { font-size: 9.5px; font-weight: 400; opacity: .75; margin-top: 1px; }
+
+    /* Puntaje Máx */
+    .td-peso-max {
+      text-align: center; font-weight: 800; font-size: 18px;
+      color: var(--area-color); background: #eef4fc !important;
+      min-width: 68px;
+    }
+
+    /* Puntaje total */
+    .td-total { text-align: center; min-width: 82px; }
+    .td-total.bueno { background: #d4edda !important; }
+    .td-total.medio { background: #fff3cd !important; }
+    .td-total.malo  { background: #f8d7da !important; }
+    .tot-val   { font-size: 18px; font-weight: 800; }
+    .tot-label { font-size: 10px; opacity: .75; margin-top: 2px; }
+    .td-total.bueno .tot-val { color: #155724; }
+    .td-total.medio .tot-val { color: #856404; }
+    .td-total.malo  .tot-val { color: #721c24; }
+
+    /* Separador entre contratos */
+    tr.grp-first td { border-top: 2px solid rgba(var(--area-color-rgb), .25); }
+
+    /* Botón eliminar */
+    .td-del { width: 28px; text-align: center; }
+    .btn-del {
+      background: none; border: none; color: #dc3545;
+      cursor: pointer; font-size: 15px; line-height: 1;
+      padding: 1px 5px; border-radius: 3px;
+    }
+    .btn-del:hover { background: #fce8ea; }
+
+    .punt-adj { display: flex; align-items: center; gap: 3px; justify-content: center; margin-top: 6px; flex-wrap: wrap; }
+    .adj-lbl  { font-size: 9px; color: #94a3b8; }
+    .inp-adj  { width: 52px; text-align: center; font-size: 11px; border: 1px solid #c5d5e8; border-radius: 3px; padding: 2px 4px; background: rgba(255,255,255,.85); -moz-appearance: textfield; appearance: textfield; }
+    .inp-adj::-webkit-inner-spin-button { display: none; }
+    .inp-adj.active { border-color: #f59e0b; background: #fffbeb; }
+    .btn-adj-reset { background: none; border: none; font-size: 10px; color: #f59e0b; cursor: pointer; padding: 0; }
+    .btn-adj-reset:hover { color: #d97706; text-decoration: underline; }
+    .override-badge { font-size: 9px; color: #92400e; background: #fef3c7; padding: 1px 5px; border-radius: 3px; margin-top: 3px; }
+
+    /* Botón agregar */
+    .row-actions { padding: 6px 18px 14px; }
+    .btn-add {
+      background: rgba(var(--area-color-rgb), .07);
+      color: var(--area-color);
+      border: 1px dashed rgba(var(--area-color-rgb), .45);
+      border-radius: 6px;
+      padding: 6px 16px; font-size: 12px;
+      cursor: pointer; font-family: inherit;
+    }
+    .btn-add:hover { background: rgba(var(--area-color-rgb), .15); }
+  </style>
+</head>
+<body>
+
+  <div class="ind-header">
+    <span class="ind-num">Ítem 2</span>
+    <span class="ind-title">Cumplimiento de los presupuestos establecidos</span>
+    <span class="ind-peso">Peso: 15</span>
+  </div>
+
+  <div class="periodo-bar">
+    Período: <span class="periodo-tag" id="periodoTag">—</span>
+  </div>
+
+  <div class="nota-anual">ℹ️ Nombre y Meta son anuales. Cumple cuando Ejecutado / Total ≤ Meta (presupuesto dentro del límite).</div>
+
+  <div class="tbl-wrap">
+    <table class="ind-tabla" id="tabla"></table>
+  </div>
+
+  <div class="row-actions">
+    <button class="btn-add" onclick="addContrato()">+ Agregar contrato</button>
+  </div>
+
+  <script>
+    // ── Período ──────────────────────────────────────────────────────────────
+    const params  = new URLSearchParams(location.search);
+    const ANIO    = parseInt(params.get('anio')) || new Date().getFullYear();
+    const MES     = parseInt(params.get('mes'))  || (new Date().getMonth() + 1);
+    const MES_PAD = String(MES).padStart(2, '0');
+    const PESO    = 15;
+    const SUB_ROWS = ['Nómina', 'HSEQ', 'Compras'];
+
+    const MESES_NOM = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                       'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    document.getElementById('periodoTag').textContent = `${MESES_NOM[MES - 1]} ${ANIO}`;
+
+    // ── Claves localStorage ──────────────────────────────────────────────────
+    const CFG_KEY = `ind2_config_${ANIO}`;
+    const DAT_KEY = `ind2_data_${ANIO}_${MES_PAD}`;
+    const OVR_KEY = `ind2_override_${ANIO}_${MES_PAD}`;
+    let puntajeOverride = null;
+
+    function saveOverride() {
+      if (puntajeOverride !== null) localStorage.setItem(OVR_KEY, puntajeOverride);
+      else localStorage.removeItem(OVR_KEY);
+    }
+    function onOverride() {
+      const el = document.getElementById('puntOverride');
+      let v = el.value !== '' ? parseFloat(el.value) : null;
+      if (v !== null) { if (v < 0) v = 0; if (v > PESO) { v = PESO; el.value = PESO; } }
+      puntajeOverride = v;
+      saveOverride(); updateOverrideUI(); refreshCalcs();
+    }
+    function resetOverride() {
+      puntajeOverride = null;
+      document.getElementById('puntOverride').value = '';
+      saveOverride(); updateOverrideUI(); refreshCalcs();
+    }
+    function updateOverrideUI() {
+      const el = document.getElementById('puntOverride');
+      const btn = document.getElementById('btnReset');
+      const badge = document.getElementById('overrideBadge');
+      if (!el) return;
+      const active = puntajeOverride !== null;
+      el.classList.toggle('active', active);
+      if (btn)   btn.style.display   = active ? 'inline' : 'none';
+      if (badge) badge.style.display = active ? 'block'  : 'none';
+    }
+
+    // ── Defaults ─────────────────────────────────────────────────────────────
+    const DEF_CONTRATOS = [
+      { nombre: 'Cumplimiento presupuestos – MTTO',        areaFormula: 'Mantenimiento', meta: 1 },
+      { nombre: 'Cumplimiento presupuestos – OPERACIONES', areaFormula: 'Producción',    meta: 1 },
+      { nombre: 'Cumplimiento presupuestos – ALS',         areaFormula: 'ALS',           meta: 1 },
+      { nombre: 'Cumplimiento presupuestos – Hocol',       areaFormula: 'Hocol',         meta: 1 },
+    ];
+    const DEF_SOPORTE = 'Control de presupuesto, suministrado por líder contable';
+
+    // ── Estado ───────────────────────────────────────────────────────────────
+    // cfg: { contratos:[{nombre, areaFormula, meta}], soporte }
+    // dat: [[{ejecutado,total}, {ejecutado,total}, {ejecutado,total}], ...]  (N contratos × 3 sub-filas)
+    let cfg, dat;
+
+    function loadAll() {
+      const sc = localStorage.getItem(CFG_KEY);
+      cfg = sc ? JSON.parse(sc)
+               : { contratos: DEF_CONTRATOS.map(c => ({ ...c })), soporte: DEF_SOPORTE };
+
+      const sd = localStorage.getItem(DAT_KEY);
+      dat = sd ? JSON.parse(sd) : [];
+
+      const N = cfg.contratos.length;
+      while (dat.length < N) dat.push(blankContrato());
+      dat = dat.slice(0, N).map(c => {
+        while (c.length < 3) c.push({ ejecutado: '', total: '' });
+        return c.slice(0, 3).map(s => ({ ejecutado: s.ejecutado ?? '', total: s.total ?? '' }));
+      });
+    }
+
+    function blankContrato() {
+      return [{ ejecutado: '', total: '' }, { ejecutado: '', total: '' }, { ejecutado: '', total: '' }];
+    }
+
+    function saveCfg() { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
+    function saveDat() { localStorage.setItem(DAT_KEY, JSON.stringify(dat)); }
+
+    // ── Formato moneda ────────────────────────────────────────────────────────
+    function parseMoney(s) {
+      return parseFloat(
+        String(s || '').replace(/\$\s*/g,'').replace(/\./g,'').replace(',','.').replace(/[^\d.-]/g,'')
+      ) || 0;
+    }
+    function fmtMoney(n) {
+      const num = Math.round(parseFloat(n) || 0);
+      return num ? '$ ' + num.toLocaleString('es-CO') : '';
+    }
+    function esc(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // Handlers moneda
+    function focusMoney(el) {
+      const raw = parseMoney(el.value);
+      el.value = raw || '';
+    }
+    function blurMoney(el, c, s, field) {
+      const raw = parseMoney(el.value);
+      dat[c][s][field] = raw || '';
+      el.value = raw ? fmtMoney(raw) : '';
+      schedSave(); refreshCalcs();
+    }
+    function inputMoney(el, c, s, field) {
+      dat[c][s][field] = parseMoney(el.value) || '';
+      schedSave(); refreshCalcs();
+    }
+
+    // ── Cálculo ───────────────────────────────────────────────────────────────
+    function calcSubRow(c, s) {
+      const ej   = parseFloat(dat[c][s].ejecutado) || 0;
+      const tot  = parseFloat(dat[c][s].total)     || 0;
+      const meta = parseFloat(cfg.contratos[c].meta) || 1;
+      const resultado = (ej > 0 && tot > 0) ? ej / tot : null;
+      const cumple    = resultado !== null && resultado <= meta;
+      return { ej, tot, resultado, cumple };
+    }
+
+    function calcTotal() {
+      const N = cfg.contratos.length;
+      const totalSubRows = N * 3;
+      const ptsPorSubRow = PESO / totalSubRows;
+      let ganado = 0;
+      for (let c = 0; c < N; c++) {
+        for (let s = 0; s < 3; s++) {
+          if (calcSubRow(c, s).cumple) ganado += ptsPorSubRow;
+        }
+      }
+      return { N, totalSubRows, ptsPorSubRow, ganado };
+    }
+
+    // ── postMessage al padre ──────────────────────────────────────────────────
+    let postTimer;
+    function postReal() {
+      clearTimeout(postTimer);
+      postTimer = setTimeout(() => {
+        const { ganado } = calcTotal();
+        const eff  = puntajeOverride !== null ? puntajeOverride : ganado;
+        const real = Math.round((eff / PESO) * 1000) / 10;
+        parent.postMessage({ type: 'setReal', id: '2', real, anio: ANIO, mes: MES }, '*');
+      }, 350);
+    }
+
+    // ── Render completo ───────────────────────────────────────────────────────
+    function renderTable() {
+      const { N, totalSubRows, ptsPorSubRow, ganado } = calcTotal();
+      const pct      = (ganado / PESO) * 100;
+      const totClass = pct >= 80 ? 'bueno' : pct >= 60 ? 'medio' : 'malo';
+
+      let h = `<thead><tr>
+        <th>Indicador</th>
+        <th>Fórmula</th>
+        <th>Meta ${ANIO}</th>
+        <th>Soporte a anexar</th>
+        <th>Descripción</th>
+        <th>Presupuesto ejecutado</th>
+        <th>Total presupuesto</th>
+        <th>Resultado</th>
+        <th>Puntaje<br>Máx</th>
+        <th>Puntaje<br>asignado</th>
+        <th></th>
+      </tr></thead><tbody>`;
+
+      for (let c = 0; c < N; c++) {
+        const grpCls = c % 2 === 0 ? 'grp-even' : 'grp-odd';
+        const contrato = cfg.contratos[c];
+
+        for (let s = 0; s < 3; s++) {
+          const { resultado, cumple } = calcSubRow(c, s);
+          const rsCls = resultado !== null ? (cumple ? 'cumple' : 'no-cumple') : '';
+          const resVal = resultado !== null ? resultado.toFixed(2) : '—';
+          const resLabel = resultado !== null ? (cumple ? '✓' : '✗') : '';
+          const firstRow = s === 0;
+          const globalFirst = c === 0 && s === 0;
+          const rowFirstCls = firstRow ? 'grp-first' : '';
+
+          h += `<tr class="${grpCls} ${rowFirstCls}">`;
+
+          // Nombre contrato (rowspan 3 por contrato)
+          if (firstRow) {
+            h += `<td class="td-nombre" rowspan="3">
+              <input class="inp-nombre" type="text" id="nom_${c}"
+                value="${esc(contrato.nombre)}"
+                oninput="onNombre(${c})">
+              <div style="font-size:10px;color:#6b7e96;margin-top:4px">
+                Área: <input type="text" id="area_${c}"
+                  value="${esc(contrato.areaFormula)}"
+                  oninput="onArea(${c})"
+                  style="width:80px;border:1px solid #c5d5e8;border-radius:3px;padding:2px 4px;font-size:10px">
+              </div>
+            </td>`;
+
+            // Fórmula (rowspan 3)
+            h += `<td class="td-formula" rowspan="3">
+              Presupuesto ejecutado por áreas / Total presupuestado por área
+              <strong>(${esc(contrato.areaFormula)})</strong>
+            </td>`;
+
+            // Meta (rowspan 3)
+            h += `<td style="text-align:center" rowspan="3">
+              <input class="inp-meta" type="number" id="meta_${c}"
+                value="${esc(contrato.meta)}"
+                oninput="onMeta(${c})" min="0" step="0.01">
+            </td>`;
+          }
+
+          // Soporte (rowspan todos, solo fila global 0)
+          if (globalFirst) {
+            h += `<td class="td-soporte" rowspan="${totalSubRows}">
+              <textarea id="soporte" oninput="onSoporte()">${esc(cfg.soporte)}</textarea>
+            </td>`;
+          }
+
+          // Sub-fila nombre
+          h += `<td class="td-sub">${SUB_ROWS[s]}</td>`;
+
+          // Presupuesto ejecutado
+          h += `<td class="td-money">
+            <input class="inp-money" type="text" id="ej_${c}_${s}"
+              value="${esc(fmtMoney(dat[c][s].ejecutado))}"
+              onfocus="focusMoney(this)"
+              onblur="blurMoney(this,${c},${s},'ejecutado')"
+              oninput="inputMoney(this,${c},${s},'ejecutado')"
+              placeholder="$ 0">
+          </td>`;
+
+          // Total presupuesto
+          h += `<td class="td-money">
+            <input class="inp-money" type="text" id="tot_${c}_${s}"
+              value="${esc(fmtMoney(dat[c][s].total))}"
+              onfocus="focusMoney(this)"
+              onblur="blurMoney(this,${c},${s},'total')"
+              oninput="inputMoney(this,${c},${s},'total')"
+              placeholder="$ 0">
+          </td>`;
+
+          // Resultado
+          h += `<td class="td-resultado ${rsCls}" id="res_${c}_${s}">
+            <div class="res-val">${resVal}</div>
+            <div class="res-label">${resLabel}</div>
+          </td>`;
+
+          // Puntaje Máx (solo fila global 0, rowspan todos)
+          if (globalFirst) {
+            h += `<td class="td-peso-max" rowspan="${totalSubRows}">${PESO}</td>`;
+          }
+
+          // Puntaje asignado (solo fila global 0, rowspan todos)
+          if (globalFirst) {
+            const effGanado = puntajeOverride !== null ? puntajeOverride : ganado;
+            const effClass  = puntajeOverride !== null
+              ? (puntajeOverride/PESO*100 >= 80 ? 'bueno' : puntajeOverride/PESO*100 >= 60 ? 'medio' : 'malo')
+              : totClass;
+            h += `<td class="td-total ${effClass}" rowspan="${totalSubRows}" id="total_pts">
+              <div class="tot-val">${effGanado.toFixed(2)}</div>
+              <div class="tot-label">de ${PESO}</div>
+              <div class="punt-adj">
+                <span class="adj-lbl">Ajuste:</span>
+                <input type="number" id="puntOverride" class="inp-adj ${puntajeOverride !== null ? 'active' : ''}"
+                  placeholder="auto" step="0.01" min="0" max="${PESO}"
+                  value="${puntajeOverride !== null ? puntajeOverride : ''}" onchange="onOverride()">
+                <button class="btn-adj-reset" id="btnReset" onclick="resetOverride()"
+                  style="display:${puntajeOverride !== null ? 'inline' : 'none'}">↺ auto</button>
+              </div>
+              <div class="override-badge" id="overrideBadge"
+                style="display:${puntajeOverride !== null ? 'block' : 'none'}">✎ Ajustado</div>
+            </td>`;
+          }
+
+          // Botón eliminar (rowspan 3, solo primera sub-fila del contrato)
+          if (firstRow) {
+            h += `<td class="td-del" rowspan="3">
+              ${N > 1 ? `<button class="btn-del" onclick="delContrato(${c})" title="Eliminar contrato">×</button>` : ''}
+            </td>`;
+          }
+
+          h += `</tr>`;
+        }
+      }
+
+      h += `</tbody>`;
+      document.getElementById('tabla').innerHTML = h;
+      postReal();
+    }
+
+    // ── Refrescar solo celdas calculadas ─────────────────────────────────────
+    function refreshCalcs() {
+      const { N, ganado } = calcTotal();
+      const pct      = (ganado / PESO) * 100;
+      const totClass = pct >= 80 ? 'bueno' : pct >= 60 ? 'medio' : 'malo';
+
+      for (let c = 0; c < N; c++) {
+        for (let s = 0; s < 3; s++) {
+          const { resultado, cumple } = calcSubRow(c, s);
+          const rsCls   = resultado !== null ? (cumple ? 'cumple' : 'no-cumple') : '';
+          const resVal  = resultado !== null ? resultado.toFixed(2) : '—';
+          const resLabel = resultado !== null ? (cumple ? '✓' : '✗') : '';
+
+          const el = document.getElementById(`res_${c}_${s}`);
+          if (el) {
+            el.className = `td-resultado ${rsCls}`;
+            el.innerHTML = `<div class="res-val">${resVal}</div><div class="res-label">${resLabel}</div>`;
+          }
+        }
+      }
+
+      const elTot = document.getElementById('total_pts');
+      if (elTot) {
+        const eff = puntajeOverride !== null ? puntajeOverride : ganado;
+        const effPct = (eff / PESO) * 100;
+        elTot.className = `td-total ${effPct >= 80 ? 'bueno' : effPct >= 60 ? 'medio' : 'malo'}`;
+        const valEl = elTot.querySelector('.tot-val');
+        if (valEl) valEl.textContent = eff.toFixed(2);
+      }
+
+      postReal();
+    }
+
+    // ── Handlers ─────────────────────────────────────────────────────────────
+    let saveTimer;
+    function schedSave() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => { saveCfg(); saveDat(); }, 600);
+    }
+
+    function onNombre(c) {
+      cfg.contratos[c].nombre = document.getElementById(`nom_${c}`).value;
+      schedSave();
+    }
+    function onArea(c) {
+      cfg.contratos[c].areaFormula = document.getElementById(`area_${c}`).value;
+      // Actualizar la celda de fórmula en vivo
+      const cells = document.querySelectorAll(`#tabla td.td-formula`);
+      if (cells[c]) {
+        cells[c].innerHTML = `Presupuesto ejecutado por áreas / Total presupuestado por área <strong>(${esc(cfg.contratos[c].areaFormula)})</strong>`;
+      }
+      schedSave();
+    }
+    function onMeta(c) {
+      cfg.contratos[c].meta = parseFloat(document.getElementById(`meta_${c}`).value) || 1;
+      schedSave(); refreshCalcs();
+    }
+    function onSoporte() {
+      cfg.soporte = document.getElementById('soporte').value;
+      schedSave();
+    }
+
+    // ── Agregar / eliminar contratos ──────────────────────────────────────────
+    function addContrato() {
+      cfg.contratos.push({ nombre: 'Nuevo contrato', areaFormula: 'Área', meta: 1 });
+      dat.push(blankContrato());
+      saveCfg(); saveDat();
+      renderTable();
+    }
+
+    function delContrato(c) {
+      if (cfg.contratos.length <= 1) return;
+      cfg.contratos.splice(c, 1);
+      dat.splice(c, 1);
+      saveCfg(); saveDat();
+      renderTable();
+    }
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    loadAll();
+    const _ov = localStorage.getItem(OVR_KEY);
+    puntajeOverride = _ov !== null ? parseFloat(_ov) : null;
+    renderTable();
+  </script>
+<script src="../../notas.js"></script></body>
+</html>

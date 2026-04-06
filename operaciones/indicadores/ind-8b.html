@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Indicador 8b – Facturación adicionales ≤ 60 días</title>
+  <link rel="stylesheet" href="../../area-base.css">
+  <style>
+    :root { --area-color: #1565c0; --area-color-rgb: 21, 101, 192; }
+    body { background: #f0f5ff; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 12.5px; color: #222; margin: 0; }
+
+    .ind-header {
+      background: var(--area-color); color: #fff;
+      padding: 10px 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .ind-num   { background: rgba(255,255,255,.2); font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 10px; flex-shrink: 0; }
+    .ind-title { font-size: 13px; font-weight: 600; flex: 1; }
+    .ind-peso  { font-size: 12px; color: rgba(255,255,255,.75); flex-shrink: 0; }
+
+    .grupo-bar {
+      background: #dce8f5; padding: 5px 18px; font-size: 11px; color: #374151;
+      border-bottom: 1px solid #b8cfe8; font-style: italic;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .periodo-tag { background: var(--area-color); color: #fff; font-size: 10.5px; font-weight: 700; padding: 1px 9px; border-radius: 10px; font-style: normal; }
+    .nota-anual { font-size: 10.5px; color: #6b7e96; font-style: italic; padding: 6px 18px 2px; }
+
+    .tbl-wrap { padding: 10px 18px 14px; overflow-x: auto; }
+    table.ind-tabla { width: 100%; border-collapse: collapse; min-width: 820px; font-size: 12px; }
+    .ind-tabla th {
+      background: var(--area-color); color: #fff; padding: 7px 8px;
+      text-align: center; border: 1px solid rgba(255,255,255,.25);
+      font-weight: 600; font-size: 11px; line-height: 1.35;
+    }
+    .ind-tabla td { border: 1px solid #c5d5e8; padding: 7px 9px; vertical-align: middle; }
+
+    .td-formula { background: #e8edf5 !important; font-size: 10.5px; color: #374151; min-width: 165px; }
+    .td-formula textarea, .td-soporte textarea, .td-obs textarea {
+      width: 100%; resize: vertical; border: 1px solid #c5d5e8; border-radius: 4px;
+      padding: 4px 6px; font-size: 11px; font-family: inherit;
+      background: #fff; color: #222; box-sizing: border-box;
+    }
+    .td-formula textarea { font-style: italic; background: #f8fafc; min-height: 52px; }
+    .td-meta { text-align: center; min-width: 90px; }
+    .inp-meta { width: 100%; box-sizing: border-box; border: 1px solid #c5d5e8; border-radius: 4px; padding: 5px 7px; font-size: 12px; background: #fff; text-align: center; }
+    .td-soporte { background: #eef4fc !important; text-align: center; min-width: 130px; }
+    .td-soporte textarea { min-height: 52px; }
+
+    .td-obs { min-width: 180px; background: #f9fafb; }
+    .td-obs textarea { min-height: 60px; }
+
+    .td-peso-max { text-align: center; font-weight: 800; font-size: 18px; color: var(--area-color); background: #eef4fc !important; width: 72px; }
+    .td-puntaje  { text-align: center; min-width: 100px; }
+
+    .punt-group { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .inp-punt {
+      width: 70px; text-align: center; font-size: 18px; font-weight: 800;
+      border: 2px solid #c5d5e8; border-radius: 6px;
+      padding: 5px 6px; background: #fff; color: var(--area-color);
+      -moz-appearance: textfield; appearance: textfield;
+    }
+    .inp-punt::-webkit-inner-spin-button { display: none; }
+    .inp-punt:focus { border-color: var(--area-color); outline: none; background: #f0f5ff; }
+    .punt-de { font-size: 10px; color: #94a3b8; }
+    .punt-bar { height: 5px; border-radius: 3px; background: #e2e8f0; margin-top: 4px; width: 70px; overflow: hidden; }
+    .punt-bar-fill { height: 100%; background: var(--area-color); transition: width .3s; }
+  </style>
+</head>
+<body>
+
+  <div class="ind-header">
+    <span class="ind-num">Ítem 8b</span>
+    <span class="ind-title">Facturación de conceptos adicionales no mayor a 60 días</span>
+    <span class="ind-peso">Peso: 5</span>
+  </div>
+
+  <div class="grupo-bar">
+    <span>Grupo:</span>
+    <span style="font-style:normal">Entrega oportuna de las hojas de entrada de la facturación y el cobro de los servicios adicionales (Max 60 días)</span>
+    &nbsp;|&nbsp; Período: <span class="periodo-tag" id="periodoTag">—</span>
+  </div>
+  <div class="nota-anual">ℹ️ Fórmula, meta y soporte son anuales. Observación y puntaje se registran por mes.</div>
+
+  <div class="tbl-wrap">
+    <table class="ind-tabla">
+      <thead>
+        <tr>
+          <th>Fórmula</th>
+          <th>Meta 2026</th>
+          <th>Soporte a anexar</th>
+          <th>Facturación adicionales<br><span style="font-weight:400;font-size:10px">(observación del mes)</span></th>
+          <th>Puntaje<br>Máx</th>
+          <th>Puntaje<br>asignado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-formula">
+            <textarea id="formula" oninput="onCfg()" placeholder="Descripción de la fórmula..."></textarea>
+          </td>
+          <td class="td-meta">
+            <input class="inp-meta" type="text" id="meta" oninput="onCfg()" placeholder="Ej: Max 60 días">
+          </td>
+          <td class="td-soporte">
+            <textarea id="soporte" oninput="onCfg()" placeholder="Soporte..."></textarea>
+          </td>
+          <td class="td-obs">
+            <textarea id="observacion" oninput="onDat()" placeholder="Escriba la observación del período..."></textarea>
+          </td>
+          <td class="td-peso-max">5</td>
+          <td class="td-puntaje">
+            <div class="punt-group">
+              <input class="inp-punt" type="number" id="puntaje"
+                placeholder="0" min="0" max="5" step="0.01"
+                oninput="onPuntaje()">
+              <span class="punt-de">de 5</span>
+              <div class="punt-bar"><div class="punt-bar-fill" id="puntBar" style="width:0%"></div></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const params  = new URLSearchParams(location.search);
+    const ANIO    = parseInt(params.get('anio')) || new Date().getFullYear();
+    const MES     = parseInt(params.get('mes'))  || (new Date().getMonth() + 1);
+    const MES_PAD = String(MES).padStart(2, '0');
+    const PESO    = 5;
+
+    const MESES_NOM = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                       'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    document.getElementById('periodoTag').textContent = `${MESES_NOM[MES - 1]} ${ANIO}`;
+
+    const CFG_KEY = `ind8b_config_${ANIO}`;
+    const DAT_KEY = `ind8b_data_${ANIO}_${MES_PAD}`;
+
+    let cfg, dat;
+
+    function loadAll() {
+      const sc = localStorage.getItem(CFG_KEY);
+      cfg = sc ? JSON.parse(sc) : {
+        formula: 'La facturación no mayor a 60 días de todos los conceptos adicionales que generan un pago de la compañía sin tener un ingreso.',
+        meta:    'Max 60 días',
+        soporte: 'Informe de pendientes'
+      };
+      const sd = localStorage.getItem(DAT_KEY);
+      dat = sd ? JSON.parse(sd) : { observacion: '', puntaje: '' };
+
+      document.getElementById('formula').value     = cfg.formula  || '';
+      document.getElementById('meta').value        = cfg.meta     || '';
+      document.getElementById('soporte').value     = cfg.soporte  || '';
+      document.getElementById('observacion').value = dat.observacion || '';
+      document.getElementById('puntaje').value     = dat.puntaje !== '' ? dat.puntaje : '';
+      updateBar();
+    }
+
+    function saveCfg() { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
+    function saveDat() { localStorage.setItem(DAT_KEY, JSON.stringify(dat)); }
+
+    function updateBar() {
+      const p = parseFloat(document.getElementById('puntaje').value) || 0;
+      document.getElementById('puntBar').style.width = Math.min(p / PESO * 100, 100) + '%';
+    }
+
+    function postReal() {
+      const p    = parseFloat(document.getElementById('puntaje').value) || 0;
+      const real = Math.round((p / PESO) * 1000) / 10;
+      parent.postMessage({ type: 'setReal', id: '8b', real, anio: ANIO, mes: MES }, '*');
+    }
+
+    let cfgTimer, datTimer;
+    function onCfg() {
+      cfg.formula  = document.getElementById('formula').value;
+      cfg.meta     = document.getElementById('meta').value;
+      cfg.soporte  = document.getElementById('soporte').value;
+      clearTimeout(cfgTimer);
+      cfgTimer = setTimeout(saveCfg, 600);
+    }
+    function onDat() {
+      dat.observacion = document.getElementById('observacion').value;
+      clearTimeout(datTimer);
+      datTimer = setTimeout(saveDat, 600);
+    }
+    function onPuntaje() {
+      const el = document.getElementById('puntaje');
+      let v = el.value !== '' ? parseFloat(el.value) : '';
+      if (v !== '' && v < 0)    { v = 0;    el.value = 0; }
+      if (v !== '' && v > PESO) { v = PESO; el.value = PESO; }
+      dat.puntaje = v;
+      clearTimeout(datTimer);
+      datTimer = setTimeout(saveDat, 600);
+      updateBar();
+      postReal();
+    }
+
+    loadAll();
+    postReal();
+  </script>
+<script src="../../notas.js"></script></body>
+</html>

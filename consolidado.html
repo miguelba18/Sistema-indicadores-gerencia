@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Consolidado – Indicadores</title>
+  <link rel="stylesheet" href="area-base.css">
+  <!-- Chart.js (cargado al inicio para las gráficas en pantalla) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <style>
+    :root { --area-color: #b45309; --area-color-rgb: 180, 83, 9; }
+
+    /* ── Selector de vista ─────────────────────────────────── */
+    .view-bar {
+      background: #fff; border-bottom: 1px solid #e8eef6;
+      padding: 8px 20px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .view-lbl { font-size: 12px; font-weight: 600; color: #374151; }
+    .view-tabs { display: flex; gap: 2px; background: #f0f4f8; border-radius: 8px; padding: 3px; }
+    .view-tab {
+      padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+      cursor: pointer; border: none; background: transparent; color: #64748b;
+      transition: all .15s; font-family: inherit;
+    }
+    .view-tab.active { background: #fff; color: var(--area-color); box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: .5; transform: scale(1.3); }
+    }
+    .btn-export {
+      margin-left: auto; background: #16a34a; color: #fff; border: none;
+      border-radius: 8px; padding: 6px 16px; font-size: 12px; font-weight: 700;
+      cursor: pointer; font-family: inherit; transition: background .15s; display: flex; align-items: center; gap: 6px;
+    }
+    .btn-export:hover  { background: #15803d; }
+    .btn-export:disabled { background: #86efac; cursor: default; }
+
+    /* ── Chips de área ─────────────────────────────────────── */
+    .areas-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(190px,1fr)); gap: 10px;
+    }
+    .area-chip {
+      background: #fff; border-radius: 10px; padding: 13px 16px;
+      display: flex; align-items: center; gap: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+      border-top: 3px solid var(--chip-color, #ccc);
+    }
+    .chip-icon { font-size: 22px; line-height: 1; }
+    .chip-info { flex: 1; }
+    .chip-name  { font-size: 12.5px; font-weight: 700; color: #2d3748; }
+    .chip-count { font-size: 10.5px; color: #8a9ab5; margin-top: 2px; }
+    .chip-score {
+      font-size: 15px; font-weight: 800; color: var(--chip-color, #94a3b8);
+      min-width: 38px; text-align: right;
+    }
+
+    /* ── Bloques de área ─────────────────────────────────────────── */
+    .area-block { background: #fff; border-radius: 12px; box-shadow: 0 1px 5px rgba(0,0,0,.07); overflow: hidden; }
+    .area-block-header {
+      display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+      border-bottom: 1px solid #e8eef6;
+    }
+    .area-block-icon { font-size: 20px; }
+    .area-block-name { font-size: 13px; font-weight: 700; color: #1e293b; flex: 1; }
+    .area-block-badge {
+      font-size: 10px; font-weight: 700; padding: 2px 9px; border-radius: 10px;
+      background: rgba(var(--block-rgb, 100,116,139),.12); color: rgba(var(--block-rgb, 100,116,139),1);
+    }
+
+    /* ── Tabla anual ─────────────────────────────────────────────── */
+    .tbl-anual { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    .tbl-anual th {
+      background: #f8fafc; color: #374151; padding: 6px 5px; text-align: center;
+      border-bottom: 2px solid #e2e8f0; border-right: 1px solid #e8eef6;
+      font-size: 10.5px; font-weight: 700; white-space: nowrap;
+    }
+    .tbl-anual th.th-ind { text-align: left; padding-left: 12px; min-width: 185px; }
+    .tbl-anual th.th-peso { min-width: 44px; }
+    .tbl-anual th.th-mes  { min-width: 56px; }
+    .tbl-anual td {
+      border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9;
+      padding: 5px 4px; text-align: center; vertical-align: middle;
+    }
+    .tbl-anual td.td-ind  { text-align: left; padding-left: 12px; line-height: 1.35; background: #f8fafc; font-size: 11px; }
+    .tbl-anual td.td-peso { font-weight: 700; color: #475569; font-size: 11px; background: #f8fafc; }
+    .tbl-anual tr.tr-total td { background: #f0f4f8; font-weight: 700; border-top: 2px solid #cbd5e0; }
+    .tbl-anual td.td-ind .ind-num-badge {
+      display: inline-block; font-size: 9px; font-weight: 800; padding: 1px 5px;
+      border-radius: 8px; background: rgba(var(--block-rgb,100,116,139),.12);
+      color: rgba(var(--block-rgb,100,116,139),1); margin-right: 5px; vertical-align: middle;
+    }
+    .tbl-anual td.td-ind .ind-label { vertical-align: middle; }
+
+    /* ── Celdas de datos ─────────────────────────────────────────── */
+    .cell-data { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+    .cell-punt { font-size: 11px; font-weight: 700; }
+    .cell-pct  { font-size: 9.5px; opacity: .75; }
+    .cell-empty { color: #c4cdd8; font-size: 12px; }
+
+    /* Semáforo */
+    .c-verde { background: #dcfce7; color: #15803d; }
+    .c-amari { background: #fef9c3; color: #a16207; }
+    .c-rojo  { background: #fee2e2; color: #b91c1c; }
+    .c-sin   { background: transparent; }
+
+    /* Celda total mes */
+    .cell-tot { font-size: 12px; font-weight: 800; }
+    .c-tot-verde { color: #15803d; }
+    .c-tot-amari { color: #a16207; }
+    .c-tot-rojo  { color: #b91c1c; }
+
+    /* ── Vista mensual ─────────────────────────────────────── */
+    .mes-tabla { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .mes-tabla th {
+      background: #f8fafc; padding: 7px 10px; font-size: 10.5px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .4px; color: #374151;
+      border-bottom: 2px solid #e2e8f0; border-right: 1px solid #e8eef6;
+    }
+    .mes-tabla th.th-l { text-align: left; }
+    .mes-tabla th.th-c { text-align: center; }
+    .mes-tabla td { border-bottom: 1px solid #f1f5f9; padding: 7px 10px; }
+    .mes-tabla td.tc { text-align: center; }
+    .mes-tabla tr:last-child td { border-top: 2px solid #cbd5e0; background: #f0f4f8; font-weight: 700; }
+
+    .sem-dot {
+      display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+      margin-right: 5px; vertical-align: middle;
+    }
+    .dot-verde { background: #22c55e; }
+    .dot-amari { background: #eab308; }
+    .dot-rojo  { background: #ef4444; }
+    .dot-sin   { background: #d1d5db; }
+
+    /* ── Gráfica ─────────────────────────────────────────── */
+    .chart-wrap {
+      padding: 8px 18px 16px; border-top: 1px solid #f1f5f9;
+      background: #fafbfc;
+    }
+    .chart-title {
+      font-size: 11px; font-weight: 700; color: #64748b;
+      text-transform: uppercase; letter-spacing: .4px; margin-bottom: 8px;
+    }
+    .chart-canvas-wrap { position: relative; height: 280px; }
+
+    /* ── Info vacía / sección ───────────────────────────── */
+    .no-data { color: #94a3b8; font-size: 11px; font-style: italic; padding: 8px; }
+    .sec-title {
+      font-size: 12.5px; font-weight: 700; color: #374151;
+      padding: 14px 20px 4px; letter-spacing: .2px;
+    }
+    .sec-sub { font-size: 11px; color: #94a3b8; font-weight: 400; margin-left: 6px; }
+  </style>
+</head>
+<body>
+
+  <div class="area-header">
+    <span class="area-title">★ Consolidado General</span>
+    <span class="area-badge">Todas las Áreas</span>
+  </div>
+
+  <div class="period-bar">
+    <label>Año</label>
+    <select id="selAnio">
+      <option>2023</option><option>2024</option><option>2025</option><option selected>2026</option>
+    </select>
+    <label id="lblMes">Mes</label>
+    <select id="selMes">
+      <option value="1">Enero</option><option value="2">Febrero</option>
+      <option value="3">Marzo</option><option value="4" selected>Abril</option>
+      <option value="5">Mayo</option><option value="6">Junio</option>
+      <option value="7">Julio</option><option value="8">Agosto</option>
+      <option value="9">Septiembre</option><option value="10">Octubre</option>
+      <option value="11">Noviembre</option><option value="12">Diciembre</option>
+    </select>
+    <span class="period-label" id="periodoLabel">Abril 2026</span>
+  </div>
+
+  <div class="view-bar">
+    <span class="view-lbl">Vista:</span>
+    <div class="view-tabs">
+      <button class="view-tab" id="tabMes" onclick="setVista('mes')">Mes seleccionado</button>
+      <button class="view-tab active" id="tabAnio" onclick="setVista('anio')">Todo el año</button>
+    </div>
+    <span id="viewDesc" style="font-size:11px;color:#94a3b8"></span>
+    <span id="liveTag" style="font-size:10px;color:#94a3b8;margin-left:4px;display:flex;align-items:center;gap:4px">
+      <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></span>
+      En vivo
+    </span>
+    <button class="btn-export" id="btnExport" onclick="exportExcel()">📥 Exportar Excel</button>
+  </div>
+
+  <div class="content" id="contenido"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   ÁREAS E INDICADORES
+═══════════════════════════════════════════════════════════════ */
+const AREAS = [
+  {
+    id: 'operaciones', nombre: 'Operaciones', icon: '⚙️', color: '#1565c0', rgb: '21,101,192',
+    keyFn: (indId, anio, mes) => `real_op_${indId}_${anio}_${String(mes).padStart(2,'0')}`,
+    indicadores: [
+      { id:'1',  item:'1',  peso:25, label:'Cumplimiento rentabilidad de los contratos' },
+      { id:'2',  item:'2',  peso:15, label:'Cumplimiento de los presupuestos establecidos' },
+      { id:'3',  item:'3',  peso:10, label:'Participación en las capacitaciones programadas' },
+      { id:'4',  item:'4',  peso:10, label:'Seguimiento cierre efectivo matriz RYOM' },
+      { id:'5',  item:'5',  peso:10, label:'Accidentes incapacitantes' },
+      { id:'6',  item:'6',  peso:5,  label:'Incidentes/accidentes vehiculares con desvío presupuestal' },
+      { id:'7',  item:'7',  peso:10, label:'Apoyo en los procesos licitatorios' },
+      { id:'8a', item:'8a', peso:5,  label:'Fecha límite facturación (día 22)' },
+      { id:'8b', item:'8b', peso:5,  label:'Facturación adicionales ≤ 60 días' },
+      { id:'9',  item:'9',  peso:5,  label:'Flujo de caja' },
+    ]
+  },
+  {
+    id: 'gestion-humana', nombre: 'Gestión Humana', icon: '👥', color: '#6a1b9a', rgb: '106,27,154',
+    keyFn: (indId, anio, mes) => `real_gh_${indId}_${anio}_${String(mes).padStart(2,'0')}`,
+    indicadores: [
+      { id:'1',  item:'1',  peso:15, label:'Revisión y recibo sin desviaciones de la proyección de nómina' },
+      { id:'2',  item:'2',  peso:20, label:'Cumplimiento del presupuesto (nóminas, liquidaciones y vacaciones)' },
+      { id:'3',  item:'3',  peso:10, label:'Apoyo en los procesos licitatorios' },
+      { id:'4',  item:'4',  peso:10, label:'Programación y Participación en las capacitaciones programadas' },
+      { id:'5',  item:'5',  peso:10, label:'Control de procesos disciplinarios' },
+      { id:'6',  item:'6',  peso:5,  label:'Flujo de caja' },
+      { id:'7',  item:'7',  peso:10, label:'Seguimiento del cierre efectivo de la matriz RYOM' },
+      { id:'8',  item:'8',  peso:5,  label:'Visitas de liderazgo' },
+      { id:'9',  item:'9',  peso:5,  label:'Desvíos de nómina por fueros' },
+      { id:'10', item:'10', peso:10, label:'Selección, vinculación, inducción de acuerdo a las normativas y parámetros establecidos por la empresa' },
+    ]
+  },
+  {
+    id: 'hseq', nombre: 'HSEQ', icon: '🛡️', color: '#2e7d32', rgb: '46,125,50',
+    keyFn: (indId, anio, mes) => `real_hseq_${indId}_${anio}_${String(mes).padStart(2,'0')}`,
+    indicadores: [
+      { id:'1',  item:'1',  peso:10,  label:'Programación y Participación en las capacitaciones programadas' },
+      { id:'2',  item:'2',  peso:5,   label:'Flujo de caja' },
+      { id:'3',  item:'3',  peso:5,   label:'Cumplimiento presupuesto' },
+      { id:'4',  item:'4',  peso:5,   label:'Participación en las capacitaciones programadas' },
+      { id:'5',  item:'5',  peso:10,  label:'Seguimiento del cierre efectivo de la matriz RYOM' },
+      { id:'6',  item:'6',  peso:5,   label:'Índice de implementación de mejora continua del SIG' },
+      { id:'7',  item:'7',  peso:2.5, label:'Cumplimiento de la normatividad legal vigente en lo referente a SSTA' },
+      { id:'8',  item:'8',  peso:5,   label:'Índice de severidad de la accidentalidad' },
+      { id:'9',  item:'9',  peso:5,   label:'Índice de frecuencia de accidentalidad' },
+      { id:'10', item:'10', peso:5,   label:'Incidencia de enfermedad laboral' },
+      { id:'11', item:'11', peso:2.5, label:'Prevalencia de enfermedad laboral' },
+      { id:'12', item:'12', peso:5,   label:'Proporción de accidentes mortales' },
+      { id:'13', item:'13', peso:2.5, label:'Primeros auxilios' },
+      { id:'14', item:'14', peso:2.5, label:'TAV - Tasa de accidentes vehiculares' },
+      { id:'15', item:'15', peso:10,  label:'Desvíos de nómina por fueros' },
+      { id:'16', item:'16', peso:2.5, label:'Consumo de agua per cápita' },
+      { id:'17', item:'17', peso:2.5, label:'Consumo de energía (kw)' },
+      { id:'18', item:'18', peso:10,  label:'Apoyo en los procesos licitatorios' },
+      { id:'19', item:'19', peso:5,   label:'Visitas de liderazgo' },
+    ]
+  },
+  {
+    id: 'financiera', nombre: 'Financiera', icon: '💼', color: '#283593', rgb: '40,53,147',
+    keyFn: (indId, anio, mes) => `real_fin_${indId}_${anio}_${String(mes).padStart(2,'0')}`,
+    indicadores: [
+      { id:'1', item:'1', peso:20, label:'Cumplimiento del porcentaje de costos financieros' },
+      { id:'2', item:'2', peso:15, label:'Pago de obligaciones tributarias' },
+      { id:'3', item:'3', peso:15, label:'Facturación a tiempo' },
+      { id:'4', item:'4', peso:10, label:'Pago de proveedores y servicios' },
+      { id:'5', item:'5', peso:10, label:'Participación en las capacitaciones programadas' },
+      { id:'6', item:'6', peso:20, label:'Flujo de caja' },
+      { id:'7', item:'7', peso:10, label:'Seguimiento del cierre efectivo de la matriz RYOM' },
+    ]
+  },
+  {
+    id: 'contabilidad', nombre: 'Contabilidad', icon: '📊', color: '#00695c', rgb: '0,105,92',
+    keyFn: (indId, anio, mes) => `real_cont_${indId}_${anio}_${String(mes).padStart(2,'0')}`,
+    indicadores: [
+      { id:'1', item:'1', peso:20, label:'Entrega oportuna de información' },
+      { id:'2', item:'2', peso:20, label:'Ejecución Presupuestal' },
+      { id:'3', item:'3', peso:7.5, label:'Entrega oportuna de información – Seguimiento y planes de acción por desvíos presupuestales' },
+      { id:'4', item:'4', peso:7.5, label:'Cierre oportuno de planes de acción por desvíos presupuestales' },
+      { id:'5', item:'5', peso:10,  label:'Elaboración y formulación de pagos tributarios' },
+      { id:'6', item:'6', peso:10,  label:'Apoyo en los procesos licitatorios' },
+      { id:'7', item:'7', peso:10,  label:'Seguimiento del cierre efectivo de la matriz RYOM' },
+      { id:'8', item:'8', peso:5,   label:'Participación en las capacitaciones programadas' },
+      { id:'9', item:'9', peso:10,  label:'Entrega de información de DIAN para conciliación de proveeduría' },
+    ]
+  },
+  {
+    id: 'compras', nombre: 'Compras', icon: '🛒', color: '#37474f', rgb: '55,71,79',
+    keyFn: (indId, anio, mes) => `real_comp_${indId}_${anio}_${String(mes).padStart(2,'0')}`,
+    indicadores: [
+      { id:'1', item:'1', peso:15, label:'Cumplimiento del presupuesto asignado para consumibles y herramientas' },
+      { id:'2', item:'2', peso:10, label:'Participación en las capacitaciones programadas' },
+      { id:'3', item:'3', peso:10, label:'Seguimiento del cierre efectivo de la matriz RYOM' },
+      { id:'4', item:'4', peso:10, label:'Apoyo en los procesos licitatorios' },
+      { id:'5', item:'5', peso:15, label:'Cumplimiento del presupuesto de vehículos' },
+      { id:'6', item:'6', peso:10, label:'Optimización de costos sin afectar la calidad y cantidad (cotizaciones)' },
+      { id:'7', item:'7', peso:10, label:'Informe de relación de proveedores y fechas de pago que no genere inconformidades del cliente' },
+      { id:'8', item:'8', peso:10, label:'Entrega de consumibles' },
+      { id:'9', item:'9', peso:10, label:'Flujo de caja' },
+    ]
+  },
+  {
+    id: 'gerencia', nombre: 'Gerencia', icon: '🏛️', color: '#b71c1c', rgb: '183,28,28',
+    keyFn: (indId, anio, mes) => `real_ger_${indId}_${anio}_${String(mes).padStart(2,'0')}`,
+    indicadores: [
+      { id:'1', item:'1', peso:15, label:'Incremento de la participación en el mercado nacional' },
+      { id:'2', item:'2', peso:30, label:'Revisión y control presupuestal' },
+      { id:'3', item:'3', peso:20, label:'Presentación de propuestas técnico económicas' },
+      { id:'4', item:'4', peso:20, label:'Visitas y reuniones gerenciales' },
+      { id:'5', item:'5', peso:5,  label:'Participación en las capacitaciones programadas' },
+      { id:'6', item:'6', peso:10, label:'Seguimiento del cierre efectivo de la matriz RYOM' },
+    ]
+  }
+];
+
+const MESES     = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MESES_NOM = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+let vistaActual = 'anio';
+
+/* ═══════════════════════════════════════════════════════════════
+   CONTROLES
+═══════════════════════════════════════════════════════════════ */
+const $anio = () => document.getElementById('selAnio').value;
+const $mes  = () => document.getElementById('selMes').value;
+
+function updateLabel() {
+  document.getElementById('periodoLabel').textContent = `${MESES_NOM[+$mes()-1]} ${$anio()}`;
+  render();
+}
+
+document.getElementById('selAnio').addEventListener('change', updateLabel);
+document.getElementById('selMes').addEventListener('change',  updateLabel);
+
+function setVista(v) {
+  vistaActual = v;
+  document.getElementById('tabMes').classList.toggle('active', v === 'mes');
+  document.getElementById('tabAnio').classList.toggle('active', v === 'anio');
+  document.getElementById('lblMes').style.opacity  = v === 'mes' ? '1' : '.4';
+  document.getElementById('selMes').disabled = v !== 'mes';
+  render();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ACTUALIZACIÓN EN TIEMPO REAL
+═══════════════════════════════════════════════════════════════ */
+let _renderTimer = null;
+function scheduleRender() {
+  clearTimeout(_renderTimer);
+  _renderTimer = setTimeout(render, 300);
+}
+
+/* Snapshot de datos actuales para detectar cambios */
+function dataSnapshot() {
+  const anio = +$anio();
+  const parts = [];
+  AREAS.forEach(area => {
+    area.indicadores.forEach(ind => {
+      for (let m = 1; m <= 12; m++) {
+        const key = area.keyFn(ind.id, anio, m);
+        const v = localStorage.getItem(key);
+        if (v !== null) parts.push(key + '=' + v);
+      }
+    });
+  });
+  return parts.join('|');
+}
+
+/* storage event: se dispara en otros frames cuando cambia localStorage */
+window.addEventListener('storage', (e) => {
+  if (e.key && e.key.startsWith('real_')) scheduleRender();
+});
+
+/* Polling cada 2 s como respaldo (útil en file:// donde storage event varía) */
+let _lastSnap = '';
+setInterval(() => {
+  const snap = dataSnapshot();
+  if (snap !== _lastSnap) { _lastSnap = snap; scheduleRender(); }
+}, 2000);
+
+/* ═══════════════════════════════════════════════════════════════
+   LECTURA localStorage
+═══════════════════════════════════════════════════════════════ */
+function getReal(area, indId, anio, mes) {
+  const key = area.keyFn ? area.keyFn(indId, anio, mes)
+    : `real_${area.id}_${indId}_${anio}_${String(mes).padStart(2,'0')}`;
+  const v = localStorage.getItem(key);
+  return v !== null ? parseFloat(v) : null;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TOTAL DE ÁREA (para chip)
+═══════════════════════════════════════════════════════════════ */
+function getAreaTotal(area, anio, mes) {
+  if (mes !== null) {
+    let sum = 0, has = false;
+    area.indicadores.forEach(ind => {
+      const real = getReal(area, ind.id, anio, mes);
+      if (real !== null) { sum += (real/100)*ind.peso; has = true; }
+    });
+    return has ? sum : null;
+  } else {
+    let totSum = 0, totCnt = 0;
+    for (let m = 1; m <= 12; m++) {
+      let mSum = 0, mHas = false;
+      area.indicadores.forEach(ind => {
+        const real = getReal(area, ind.id, anio, m);
+        if (real !== null) { mSum += (real/100)*ind.peso; mHas = true; }
+      });
+      if (mHas) { totSum += mSum; totCnt++; }
+    }
+    return totCnt > 0 ? totSum / totCnt : null;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDER PRINCIPAL
+═══════════════════════════════════════════════════════════════ */
+function render() {
+  const el   = document.getElementById('contenido');
+  const anio = +$anio();
+  const mes  = +$mes();
+
+  let html = '';
+
+  /* ── Chips resumen ──────────────────────────── */
+  html += `<div style="padding:14px 20px 6px"><div class="areas-grid">`;
+  AREAS.forEach(a => {
+    const total = getAreaTotal(a, anio, vistaActual === 'mes' ? mes : null);
+    const pMax  = a.indicadores.reduce((s,i)=>s+i.peso, 0);
+    const cls   = total !== null ? (total/pMax*100 >= 80 ? 'c-tot-verde' : total/pMax*100 >= 60 ? 'c-tot-amari' : 'c-tot-rojo') : '';
+    html += `
+      <div class="area-chip" style="--chip-color:${a.color}">
+        <div class="chip-icon">${a.icon}</div>
+        <div class="chip-info">
+          <div class="chip-name">${a.nombre}</div>
+          <div class="chip-count">${a.indicadores.length} indicadores · Peso ${pMax}</div>
+        </div>
+        <div class="chip-score ${cls}">${total !== null ? total.toFixed(1) : '—'}</div>
+      </div>`;
+  });
+
+  html += `</div></div>`;
+
+  /* ── Bloques por área ───────────────────────── */
+  AREAS.forEach(a => { html += renderAreaBlock(a, anio, mes); });
+
+  el.innerHTML = html;
+
+  /* ── Inicializar gráficas tras actualizar DOM ── */
+  renderCharts(anio, mes);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BLOQUE DE ÁREA (tabla + canvas de gráfica)
+═══════════════════════════════════════════════════════════════ */
+function renderAreaBlock(area, anio, mes) {
+  let h = `
+    <div class="sec-title">${area.icon} ${area.nombre}
+      <span class="sec-sub">Peso total: ${area.indicadores.reduce((s,i)=>s+i.peso,0)}</span>
+    </div>
+    <div style="padding:0 20px 18px">
+      <div class="area-block" style="--block-rgb:${area.rgb}">
+        <div class="area-block-header" style="background:${area.color}08">
+          <span class="area-block-icon">${area.icon}</span>
+          <span class="area-block-name" style="color:${area.color}">${area.nombre}</span>
+          <span class="area-block-badge" style="--block-rgb:${area.rgb}">
+            ${vistaActual === 'anio' ? 'Vista Anual '+anio : MESES_NOM[mes-1]+' '+anio}
+          </span>
+        </div>`;
+
+  if (vistaActual === 'anio') {
+    h += renderTablaAnual(area, anio);
+  } else {
+    h += renderTablaMes(area, anio, mes);
+  }
+
+  /* Canvas para la gráfica */
+  const chartLabel = vistaActual === 'anio'
+    ? `Puntaje total mensual – ${anio}`
+    : `Puntaje por indicador – ${MESES_NOM[mes-1]} ${anio}`;
+  h += `
+    <div class="chart-wrap">
+      <div class="chart-title">${chartLabel}</div>
+      <div class="chart-canvas-wrap">
+        <canvas id="chart_${area.id}"></canvas>
+      </div>
+    </div>`;
+
+  h += `</div></div>`;
+  return h;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TABLA ANUAL
+═══════════════════════════════════════════════════════════════ */
+function renderTablaAnual(area, anio) {
+  const rgb = area.rgb;
+  let h = `<div style="overflow-x:auto"><table class="tbl-anual" style="--block-rgb:${rgb}">
+    <thead><tr>
+      <th class="th-ind">Indicador</th>
+      <th class="th-peso">Peso</th>`;
+  for (let m = 1; m <= 12; m++) h += `<th class="th-mes">${MESES[m-1]}</th>`;
+  h += `<th class="th-mes" style="border-left:2px solid #cbd5e0">Prom.</th></tr></thead><tbody>`;
+
+  area.indicadores.forEach(ind => {
+    h += `<tr><td class="td-ind">
+      <span class="ind-num-badge" style="--block-rgb:${rgb}">${ind.item}</span>
+      <span class="ind-label">${ind.label}</span>
+    </td><td class="td-peso">${ind.peso}</td>`;
+    let sum = 0, cnt = 0;
+    for (let m = 1; m <= 12; m++) {
+      const real = getReal(area, ind.id, anio, m);
+      if (real !== null) {
+        const punt   = (real/100)*ind.peso;
+        const semCls = real >= 80 ? 'c-verde' : real >= 60 ? 'c-amari' : 'c-rojo';
+        h += `<td class="${semCls}" title="${ind.label} – ${MESES_NOM[m-1]}: ${real.toFixed(1)}%">
+          <div class="cell-data">
+            <span class="cell-punt">${punt.toFixed(2)}</span>
+            <span class="cell-pct">${real.toFixed(0)}%</span>
+          </div></td>`;
+        sum += punt; cnt++;
+      } else {
+        h += `<td class="c-sin"><span class="cell-empty">·</span></td>`;
+      }
+    }
+    const prom    = cnt > 0 ? sum/cnt : null;
+    const promPct = prom !== null ? prom/ind.peso*100 : null;
+    const promCls = promPct !== null ? (promPct >= 80 ? 'c-verde' : promPct >= 60 ? 'c-amari' : 'c-rojo') : 'c-sin';
+    h += `<td class="${promCls}" style="border-left:2px solid #cbd5e0">
+      ${prom !== null ? `<div class="cell-data"><span class="cell-punt">${prom.toFixed(2)}</span><span class="cell-pct">${promPct.toFixed(0)}%</span></div>` : '<span class="cell-empty">·</span>'}
+    </td></tr>`;
+  });
+
+  /* Fila total */
+  const pMax = area.indicadores.reduce((s,i)=>s+i.peso,0);
+  h += `<tr class="tr-total"><td class="td-ind" style="font-weight:700">TOTAL</td><td class="td-peso">${pMax}</td>`;
+  let totSum = 0, totCnt = 0;
+  for (let m = 1; m <= 12; m++) {
+    let mSum = 0, mHas = false;
+    area.indicadores.forEach(ind => {
+      const real = getReal(area, ind.id, anio, m);
+      if (real !== null) { mSum += (real/100)*ind.peso; mHas = true; }
+    });
+    if (mHas) {
+      const pct = mSum/pMax*100;
+      const cls = pct >= 80 ? 'c-tot-verde' : pct >= 60 ? 'c-tot-amari' : 'c-tot-rojo';
+      h += `<td><span class="cell-tot ${cls}">${mSum.toFixed(1)}</span></td>`;
+      totSum += mSum; totCnt++;
+    } else {
+      h += `<td><span class="cell-empty">·</span></td>`;
+    }
+  }
+  const totProm = totCnt > 0 ? totSum/totCnt : null;
+  const totCls  = totProm !== null ? (totProm/pMax*100 >= 80 ? 'c-tot-verde' : totProm/pMax*100 >= 60 ? 'c-tot-amari' : 'c-tot-rojo') : '';
+  h += `<td style="border-left:2px solid #cbd5e0">
+    ${totProm !== null ? `<span class="cell-tot ${totCls}">${totProm.toFixed(1)}</span>` : '<span class="cell-empty">·</span>'}
+  </td></tr>`;
+
+  h += `</tbody></table></div>`;
+  return h;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TABLA MES
+═══════════════════════════════════════════════════════════════ */
+function renderTablaMes(area, anio, mes) {
+  let h = `<table class="mes-tabla" style="--block-rgb:${area.rgb}">
+    <thead><tr>
+      <th class="th-l">#</th><th class="th-l">Indicador</th>
+      <th class="th-c">Peso</th><th class="th-c">Puntaje</th><th class="th-c">Cumpl.&nbsp;%</th>
+    </tr></thead><tbody>`;
+
+  let totalPunt = 0, totalHas = false;
+  area.indicadores.forEach(ind => {
+    const real = getReal(area, ind.id, anio, mes);
+    const punt = real !== null ? (real/100)*ind.peso : null;
+    if (punt !== null) { totalPunt += punt; totalHas = true; }
+    const semCls = real === null ? 'dot-sin' : real >= 80 ? 'dot-verde' : real >= 60 ? 'dot-amari' : 'dot-rojo';
+    h += `<tr>
+      <td style="font-weight:700;color:${area.color};width:32px">${ind.item}</td>
+      <td>${ind.label}</td>
+      <td class="tc">${ind.peso}</td>
+      <td class="tc" style="font-weight:700">${punt !== null ? punt.toFixed(2) : '—'}</td>
+      <td class="tc"><span class="sem-dot ${semCls}"></span>${real !== null ? real.toFixed(1)+'%' : '—'}</td>
+    </tr>`;
+  });
+
+  const pMax   = area.indicadores.reduce((s,i)=>s+i.peso,0);
+  const totCls = totalHas ? (totalPunt/pMax*100 >= 80 ? 'c-tot-verde' : totalPunt/pMax*100 >= 60 ? 'c-tot-amari' : 'c-tot-rojo') : '';
+  h += `<tr>
+    <td colspan="2" style="text-align:right">TOTAL</td>
+    <td class="tc">${pMax}</td>
+    <td class="tc ${totCls}" style="font-size:14px">${totalHas ? totalPunt.toFixed(2) : '—'}</td>
+    <td class="tc ${totCls}">${totalHas ? (totalPunt/pMax*100).toFixed(1)+'%' : '—'}</td>
+  </tr></tbody></table>`;
+  return h;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GRÁFICAS (Chart.js + datalabels)
+═══════════════════════════════════════════════════════════════ */
+const chartInstances = {};
+
+/* Registrar plugin global de datalabels */
+if (window.ChartDataLabels) Chart.register(ChartDataLabels);
+
+/* Helpers de color */
+function semColor(pct, alpha) {
+  if (pct >= 80) return `rgba(34,197,94,${alpha})`;
+  if (pct >= 60) return `rgba(234,179,8,${alpha})`;
+  return `rgba(239,68,68,${alpha})`;
+}
+function semBorder(pct) { return semColor(pct, 1); }
+function semBg(pct)     { return semColor(pct, 0.75); }
+
+function renderCharts(anio, mes) {
+  /* Destruir instancias anteriores */
+  Object.keys(chartInstances).forEach(k => {
+    chartInstances[k].destroy();
+    delete chartInstances[k];
+  });
+
+  AREAS.forEach(area => {
+    const canvas = document.getElementById(`chart_${area.id}`);
+    if (!canvas) return;
+    const pMax = area.indicadores.reduce((s,i)=>s+i.peso, 0);
+
+    if (vistaActual === 'anio') {
+      /* ── Vista anual: barras mensuales ── */
+      const data    = [];
+      const bgColor = [];
+      const bdColor = [];
+      for (let m = 1; m <= 12; m++) {
+        let mSum = 0, mHas = false;
+        area.indicadores.forEach(ind => {
+          const real = getReal(area, ind.id, anio, m);
+          if (real !== null) { mSum += (real/100)*ind.peso; mHas = true; }
+        });
+        if (mHas) {
+          const v = +mSum.toFixed(2);
+          data.push(v);
+          const pct = v/pMax*100;
+          bgColor.push(semBg(pct));
+          bdColor.push(semBorder(pct));
+        } else {
+          data.push(null);
+          bgColor.push('rgba(203,213,225,0.5)');
+          bdColor.push('#cbd5e0');
+        }
+      }
+
+      chartInstances[area.id] = new Chart(canvas, {
+        type: 'bar',
+        plugins: window.ChartDataLabels ? [ChartDataLabels] : [],
+        data: {
+          labels: MESES,
+          datasets: [
+            {
+              label: 'Puntaje obtenido',
+              data,
+              backgroundColor: bgColor,
+              borderColor: bdColor,
+              borderWidth: 1.5,
+              borderRadius: 6,
+              borderSkipped: false,
+              datalabels: {
+                anchor: 'end', align: 'top',
+                formatter: v => v !== null ? v.toFixed(1) : '',
+                font: { size: 9.5, weight: '700' },
+                color: '#374151',
+                display: v => v !== null,
+              }
+            },
+            {
+              label: `Máximo (${pMax})`,
+              data: Array(12).fill(pMax),
+              type: 'line',
+              borderColor: '#94a3b8',
+              borderDash: [5, 4],
+              borderWidth: 2,
+              pointRadius: 0,
+              fill: false,
+              datalabels: { display: false }
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true, position: 'bottom',
+              labels: { font: { size: 10.5 }, boxWidth: 14, padding: 12 }
+            },
+            tooltip: {
+              backgroundColor: '#1e293b',
+              titleFont: { size: 11 }, bodyFont: { size: 11 },
+              callbacks: {
+                title: ctx => MESES_NOM[ctx[0].dataIndex],
+                label: ctx => {
+                  if (ctx.datasetIndex === 1) return `  Máximo: ${pMax} pts`;
+                  const v = ctx.parsed.y;
+                  if (v === null) return '  Sin datos';
+                  return `  Puntaje: ${v.toFixed(2)} pts  (${(v/pMax*100).toFixed(0)}%)`;
+                }
+              }
+            },
+            datalabels: { display: false } /* default off, overridden per dataset */
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: pMax * 1.12,
+              grid: { color: '#f1f5f9' },
+              ticks: { font: { size: 10 }, callback: v => v.toFixed(0) },
+              title: { display: true, text: 'Puntaje', font: { size: 10 }, color: '#94a3b8' }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { size: 10.5, weight: '600' } }
+            }
+          }
+        }
+      });
+
+    } else {
+      /* ── Vista mensual: barras horizontales por indicador ── */
+      const labels = area.indicadores.map(ind => {
+        const short = ind.label.length > 32 ? ind.label.substring(0, 31) + '…' : ind.label;
+        return `${ind.item}. ${short}`;
+      });
+      const puntos  = area.indicadores.map(ind => {
+        const real = getReal(area, ind.id, anio, mes);
+        return real !== null ? +(real/100*ind.peso).toFixed(2) : null;
+      });
+      const maximos = area.indicadores.map(ind => ind.peso);
+      const bgColors = puntos.map((p, i) => {
+        if (p === null) return 'rgba(203,213,225,0.4)';
+        const pct = maximos[i] > 0 ? p/maximos[i]*100 : 0;
+        return semBg(pct);
+      });
+      const bdColors = puntos.map((p, i) => {
+        if (p === null) return '#cbd5e0';
+        const pct = maximos[i] > 0 ? p/maximos[i]*100 : 0;
+        return semBorder(pct);
+      });
+
+      /* Para el fondo (resto hasta max) */
+      const fondo = puntos.map((p, i) => p !== null ? maximos[i] - p : maximos[i]);
+
+      chartInstances[area.id] = new Chart(canvas, {
+        type: 'bar',
+        plugins: window.ChartDataLabels ? [ChartDataLabels] : [],
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Puntaje obtenido',
+              data: puntos.map(p => p ?? 0),
+              backgroundColor: bgColors,
+              borderColor: bdColors,
+              borderWidth: 1.5,
+              borderRadius: { topRight: 4, bottomRight: 4 },
+              borderSkipped: 'left',
+              datalabels: {
+                anchor: 'end', align: 'right',
+                formatter: (v, ctx) => {
+                  const ind = area.indicadores[ctx.dataIndex];
+                  const pct = ind.peso > 0 ? v/ind.peso*100 : 0;
+                  return puntos[ctx.dataIndex] !== null ? `${v.toFixed(1)} (${pct.toFixed(0)}%)` : '';
+                },
+                font: { size: 9.5, weight: '700' },
+                color: '#374151',
+                display: (ctx) => puntos[ctx.dataIndex] !== null,
+              }
+            },
+            {
+              label: 'Peso máximo',
+              data: fondo,
+              backgroundColor: 'rgba(241,245,249,0.9)',
+              borderColor: '#e2e8f0',
+              borderWidth: 1,
+              borderRadius: { topRight: 4, bottomRight: 4 },
+              borderSkipped: 'left',
+              datalabels: { display: false }
+            }
+          ]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true, position: 'bottom',
+              labels: { font: { size: 10.5 }, boxWidth: 14, padding: 12 }
+            },
+            tooltip: {
+              backgroundColor: '#1e293b',
+              titleFont: { size: 11 }, bodyFont: { size: 11 },
+              callbacks: {
+                title: ctx => area.indicadores[ctx[0].dataIndex].label,
+                label: ctx => {
+                  const ind = area.indicadores[ctx.dataIndex];
+                  if (ctx.datasetIndex === 1) return `  Peso máximo: ${ind.peso} pts`;
+                  const p = puntos[ctx.dataIndex];
+                  if (p === null) return '  Sin datos registrados';
+                  const pct = ind.peso > 0 ? p/ind.peso*100 : 0;
+                  return `  Obtenido: ${p.toFixed(2)} pts  (${pct.toFixed(0)}%)`;
+                }
+              }
+            },
+            datalabels: { display: false }
+          },
+          scales: {
+            x: {
+              stacked: true,
+              beginAtZero: true,
+              max: Math.max(...maximos) + 1,
+              grid: { color: '#f1f5f9' },
+              ticks: { font: { size: 10 }, callback: v => v.toFixed(0) }
+            },
+            y: {
+              stacked: true,
+              grid: { display: false },
+              ticks: { font: { size: 10 } }
+            }
+          }
+        }
+      });
+    }
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EXPORTAR EXCEL (ExcelJS – carga diferida)
+═══════════════════════════════════════════════════════════════ */
+let _excelJSLoaded = false;
+function loadExcelJS() {
+  if (_excelJSLoaded || window.ExcelJS) { _excelJSLoaded = true; return Promise.resolve(); }
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';
+    s.onload  = () => { _excelJSLoaded = true; resolve(); };
+    s.onerror = () => reject(new Error('No se pudo cargar ExcelJS. Verifica tu conexión a internet.'));
+    document.head.appendChild(s);
+  });
+}
+
+/* Convierte % a colores ARGB para ExcelJS */
+function semArgb(pct) {
+  if (pct >= 80) return { bg: 'FFDCFCE7', font: 'FF15803D' };
+  if (pct >= 60) return { bg: 'FFFEF9C3', font: 'FFA16207' };
+  return { bg: 'FFFEE2E2', font: 'FFB91C1C' };
+}
+function headerFill(hexColor) {
+  /* '#1565c0' → 'FF1565C0' */
+  return 'FF' + hexColor.replace('#','').toUpperCase();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GRÁFICA CON FONDO NEGRO (para exportar)
+═══════════════════════════════════════════════════════════════ */
+function getChartDataURLDark(area, anio, mes) {
+  const pMax   = area.indicadores.reduce((s,i)=>s+i.peso, 0);
+  const isAnio = vistaActual === 'anio';
+  const W = 1000;
+  const H = isAnio ? 340 : Math.max(340, area.indicadores.length * 32 + 80);
+
+  const tmp = document.createElement('canvas');
+  tmp.width  = W; tmp.height = H;
+  tmp.style.cssText = 'position:absolute;left:-9999px;top:-9999px;opacity:0';
+  document.body.appendChild(tmp);
+
+  const darkBgPlugin = [{
+    id: 'darkBg',
+    beforeDraw(chart) {
+      const ctx = chart.canvas.getContext('2d');
+      ctx.save(); ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, W, H); ctx.restore();
+    }
+  }];
+  function dBg(pct) {
+    if (pct >= 80) return 'rgba(34,197,94,0.88)';
+    if (pct >= 60) return 'rgba(234,179,8,0.88)';
+    return 'rgba(239,68,68,0.88)';
+  }
+  function dBd(pct) {
+    if (pct >= 80) return '#22c55e'; if (pct >= 60) return '#eab308'; return '#ef4444';
+  }
+
+  let config;
+  if (isAnio) {
+    const data = [], bgC = [], bdC = [];
+    for (let m = 1; m <= 12; m++) {
+      let mSum = 0, mHas = false;
+      area.indicadores.forEach(ind => {
+        const r = getReal(area, ind.id, anio, m);
+        if (r !== null) { mSum += (r/100)*ind.peso; mHas = true; }
+      });
+      if (mHas) {
+        const v = +mSum.toFixed(2), pct = v/pMax*100;
+        data.push(v); bgC.push(dBg(pct)); bdC.push(dBd(pct));
+      } else { data.push(null); bgC.push('rgba(51,65,85,0.4)'); bdC.push('#334155'); }
+    }
+    config = {
+      type: 'bar',
+      plugins: [...(window.ChartDataLabels ? [ChartDataLabels] : []), ...darkBgPlugin],
+      data: {
+        labels: MESES,
+        datasets: [
+          {
+            label: 'Puntaje obtenido', data,
+            backgroundColor: bgC, borderColor: bdC, borderWidth: 2,
+            borderRadius: 7, borderSkipped: false,
+            datalabels: {
+              anchor: 'end', align: 'top',
+              formatter: v => v !== null ? v.toFixed(1) : '',
+              font: { size: 12, weight: '800' }, color: '#f1f5f9',
+              display: v => v !== null
+            }
+          },
+          {
+            label: `Máximo (${pMax})`, data: Array(12).fill(pMax),
+            type: 'line', borderColor: 'rgba(148,163,184,0.4)',
+            borderDash: [6,4], borderWidth: 2, pointRadius: 0, fill: false,
+            datalabels: { display: false }
+          }
+        ]
+      },
+      options: {
+        responsive: false, animation: false,
+        plugins: {
+          legend: { display: true, position: 'bottom',
+            labels: { font: { size: 11 }, boxWidth: 14, padding: 14, color: '#94a3b8' } },
+          tooltip: { enabled: false }, datalabels: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true, max: pMax * 1.2,
+            grid: { color: 'rgba(255,255,255,0.07)' },
+            ticks: { font: { size: 11, weight: '600' }, callback: v => v.toFixed(0), color: '#94a3b8' },
+            title: { display: true, text: 'Puntaje', font: { size: 11 }, color: '#64748b' }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { font: { size: 13, weight: '700' }, color: '#e2e8f0' }
+          }
+        }
+      }
+    };
+  } else {
+    const labels = area.indicadores.map(ind => {
+      const s = ind.label.length > 36 ? ind.label.substring(0,35)+'…' : ind.label;
+      return `${ind.item}. ${s}`;
+    });
+    const puntos  = area.indicadores.map(ind => {
+      const r = getReal(area, ind.id, anio, mes);
+      return r !== null ? +(r/100*ind.peso).toFixed(2) : null;
+    });
+    const maximos = area.indicadores.map(ind => ind.peso);
+    const bgColors = puntos.map((p,i) => p === null ? 'rgba(51,65,85,0.4)' : dBg(maximos[i]>0 ? p/maximos[i]*100 : 0));
+    const bdColors = puntos.map((p,i) => p === null ? '#334155' : dBd(maximos[i]>0 ? p/maximos[i]*100 : 0));
+    const fondo = puntos.map((p,i) => p !== null ? maximos[i]-p : maximos[i]);
+    config = {
+      type: 'bar',
+      plugins: [...(window.ChartDataLabels ? [ChartDataLabels] : []), ...darkBgPlugin],
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Puntaje obtenido', data: puntos.map(p => p ?? 0),
+            backgroundColor: bgColors, borderColor: bdColors, borderWidth: 2,
+            borderRadius: { topRight: 5, bottomRight: 5 }, borderSkipped: 'left',
+            datalabels: {
+              anchor: 'end', align: 'right',
+              formatter: (v, ctx) => {
+                const ind = area.indicadores[ctx.dataIndex];
+                const pct = ind.peso > 0 ? v/ind.peso*100 : 0;
+                return puntos[ctx.dataIndex] !== null ? `${v.toFixed(1)} (${pct.toFixed(0)}%)` : '';
+              },
+              font: { size: 10.5, weight: '700' }, color: '#f1f5f9',
+              display: ctx => puntos[ctx.dataIndex] !== null
+            }
+          },
+          {
+            label: 'Peso máximo', data: fondo,
+            backgroundColor: 'rgba(30,41,59,0.65)', borderColor: '#1e3a5f',
+            borderWidth: 1, borderRadius: { topRight: 4, bottomRight: 4 }, borderSkipped: 'left',
+            datalabels: { display: false }
+          }
+        ]
+      },
+      options: {
+        indexAxis: 'y', responsive: false, animation: false,
+        plugins: {
+          legend: { display: true, position: 'bottom',
+            labels: { font: { size: 11 }, boxWidth: 14, padding: 14, color: '#94a3b8' } },
+          tooltip: { enabled: false }, datalabels: { display: false }
+        },
+        scales: {
+          x: {
+            stacked: true, beginAtZero: true, max: Math.max(...maximos) + 1,
+            grid: { color: 'rgba(255,255,255,0.07)' },
+            ticks: { font: { size: 11 }, callback: v => v.toFixed(0), color: '#94a3b8' }
+          },
+          y: {
+            stacked: true, grid: { display: false },
+            ticks: { font: { size: 10.5 }, color: '#e2e8f0' }
+          }
+        }
+      }
+    };
+  }
+
+  return new Promise(resolve => {
+    try {
+      const chart = new Chart(tmp, config);
+      setTimeout(() => {
+        try {
+          const b64 = tmp.toDataURL('image/png').split(',')[1];
+          chart.destroy(); document.body.removeChild(tmp);
+          resolve(b64);
+        } catch(e) {
+          try { chart.destroy(); document.body.removeChild(tmp); } catch(_) {}
+          resolve(null);
+        }
+      }, 220);
+    } catch(e) {
+      try { document.body.removeChild(tmp); } catch(_) {}
+      resolve(null);
+    }
+  });
+}
+
+async function exportExcel() {
+  const btn = document.getElementById('btnExport');
+  btn.disabled = true; btn.innerHTML = '⏳ Generando…';
+
+  try { await loadExcelJS(); }
+  catch(e) { alert(e.message); btn.disabled = false; btn.innerHTML = '📥 Exportar Excel'; return; }
+
+  const anio   = +$anio();
+  const mes    = +$mes();
+  const isAnio = vistaActual === 'anio';
+  const NCOLS  = isAnio ? 16 : 5;
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Consolidado Indicadores'; wb.created = new Date();
+
+  const wsTitle = isAnio ? `Consolidado ${anio}` : `${MESES_NOM[mes-1]} ${anio}`;
+  const ws = wb.addWorksheet(wsTitle, { views: [{ showGridLines: false }] });
+
+  /* Anchos fijos de columnas */
+  ws.getColumn(1).width = 7;
+  ws.getColumn(2).width = 44;
+  ws.getColumn(3).width = 8;
+  if (isAnio) {
+    for (let c = 4; c <= 15; c++) ws.getColumn(c).width = 9;
+    ws.getColumn(16).width = 9;
+  } else {
+    ws.getColumn(4).width = 13; ws.getColumn(5).width = 13;
+  }
+
+  for (const area of AREAS) {
+    const hColor = headerFill(area.color);
+    const hFg    = { argb: hColor };
+    const pMax   = area.indicadores.reduce((s,i)=>s+i.peso, 0);
+
+    const styleHeader = row => row.eachCell(cell => {
+      cell.font      = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+      cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: hFg };
+      cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+      cell.border    = { top:{style:'thin',color:{argb:'FFFFFFFF'}}, bottom:{style:'thin',color:{argb:'FFFFFFFF'}},
+                         left:{style:'thin',color:{argb:'FFFFFFFF'}}, right:{style:'thin',color:{argb:'FFFFFFFF'}} };
+    });
+    const styleData = (cell, pct) => {
+      const c = semArgb(pct);
+      cell.font      = { bold: true, color: { argb: c.font }, size: 10 };
+      cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: c.bg } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    };
+    const styleTotal = row => row.eachCell(cell => {
+      cell.font      = { bold: true, size: 11 };
+      cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0F4F8' } };
+      cell.border    = { top: { style: 'medium', color: { argb: 'FFCBD5E0' } } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    });
+
+    /* ── Título del área ── */
+    const titleRow = ws.addRow([`${area.icon}  ${area.nombre}  –  ${isAnio ? 'Año ' + anio : MESES_NOM[mes-1] + ' ' + anio}`]);
+    ws.mergeCells(titleRow.number, 1, titleRow.number, NCOLS);
+    const tc = titleRow.getCell(1);
+    tc.font      = { bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
+    tc.fill      = { type: 'pattern', pattern: 'solid', fgColor: hFg };
+    tc.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
+    titleRow.height = 26;
+
+    /* espacio */
+    const sp = ws.addRow([]); sp.height = 4;
+
+    /* ── Cabecera ── */
+    const hdrValues = isAnio ? ['Ítem', 'Indicador', 'Peso', ...MESES, 'Prom.']
+                             : ['#', 'Indicador', 'Peso', 'Puntaje', 'Cumpl. %'];
+    const hdrRow = ws.addRow(hdrValues);
+    styleHeader(hdrRow); hdrRow.height = 28;
+
+    /* ── Filas de datos ── */
+    if (isAnio) {
+      area.indicadores.forEach(ind => {
+        const rv = [ind.item, ind.label, ind.peso];
+        let sum = 0, cnt = 0;
+        for (let m = 1; m <= 12; m++) {
+          const real = getReal(area, ind.id, anio, m);
+          if (real !== null) { rv.push(+(real/100*ind.peso).toFixed(2)); sum += (real/100)*ind.peso; cnt++; }
+          else rv.push('');
+        }
+        rv.push(cnt > 0 ? +(sum/cnt).toFixed(2) : '');
+        const row = ws.addRow(rv);
+        row.getCell(1).font      = { bold: true, color: { argb: hColor }, size: 10 };
+        row.getCell(1).alignment = { horizontal: 'center' };
+        row.getCell(2).font      = { size: 10 };
+        row.getCell(2).alignment = { wrapText: true };
+        row.getCell(3).alignment = { horizontal: 'center' };
+        for (let m = 1; m <= 12; m++) {
+          const real = getReal(area, ind.id, anio, m);
+          if (real !== null) { styleData(row.getCell(3+m), real); row.getCell(3+m).value = +(real/100*ind.peso).toFixed(2); }
+          else row.getCell(3+m).alignment = { horizontal: 'center' };
+        }
+        if (cnt > 0) { styleData(row.getCell(16), (sum/cnt)/ind.peso*100); row.getCell(16).value = +(sum/cnt).toFixed(2); }
+        row.height = 20;
+      });
+    } else {
+      area.indicadores.forEach(ind => {
+        const real = getReal(area, ind.id, anio, mes);
+        const punt = real !== null ? +(real/100*ind.peso).toFixed(2) : '';
+        const row  = ws.addRow([ind.item, ind.label, ind.peso, punt, real !== null ? +real.toFixed(1) : '']);
+        row.getCell(1).font      = { bold: true, color: { argb: hColor }, size: 10 };
+        row.getCell(1).alignment = { horizontal: 'center' };
+        row.getCell(2).font      = { size: 10 };
+        row.getCell(2).alignment = { wrapText: true };
+        if (real !== null) {
+          styleData(row.getCell(4), real); row.getCell(4).value = punt;
+          styleData(row.getCell(5), real); row.getCell(5).value = +real.toFixed(1);
+        }
+        row.height = 20;
+      });
+    }
+
+    /* ── Fila TOTAL ── */
+    let totVals;
+    if (isAnio) {
+      totVals = ['', 'TOTAL', pMax];
+      let tSum = 0, tCnt = 0;
+      for (let m = 1; m <= 12; m++) {
+        let mSum = 0, mHas = false;
+        area.indicadores.forEach(ind => { const r = getReal(area, ind.id, anio, m); if (r !== null) { mSum += (r/100)*ind.peso; mHas = true; } });
+        totVals.push(mHas ? +mSum.toFixed(2) : '');
+        if (mHas) { tSum += mSum; tCnt++; }
+      }
+      totVals.push(tCnt > 0 ? +(tSum/tCnt).toFixed(2) : '');
+    } else {
+      let totalPunt = 0, totalHas = false;
+      area.indicadores.forEach(ind => { const r = getReal(area, ind.id, anio, mes); if (r !== null) { totalPunt += r/100*ind.peso; totalHas = true; } });
+      totVals = ['', 'TOTAL', pMax, totalHas ? +totalPunt.toFixed(2) : '', totalHas ? +(totalPunt/pMax*100).toFixed(1) : ''];
+    }
+    const totRow = ws.addRow(totVals);
+    styleTotal(totRow); totRow.height = 22;
+
+    /* ── Gráfica fondo negro ── */
+    try {
+      const b64 = await getChartDataURLDark(area, anio, mes);
+      if (b64) {
+        const imgId = wb.addImage({ base64: b64, extension: 'png' });
+        ws.addImage(imgId, { tl: { col: 0, row: totRow.number }, ext: { width: 750, height: 300 } });
+      }
+    } catch(e) { /* ignorar si falla */ }
+
+    /* Espacio para la imagen + separador visual entre áreas */
+    for (let r = 0; r < 17; r++) { const er = ws.addRow([]); er.height = 18; }
+    const sepRow = ws.addRow([]);
+    ws.mergeCells(sepRow.number, 1, sepRow.number, NCOLS);
+    sepRow.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } };
+    sepRow.height = 5;
+    ws.addRow([]).height = 10;
+  }
+
+  /* ── Descargar ── */
+  const buffer = await wb.xlsx.writeBuffer();
+  const blob   = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const url    = URL.createObjectURL(blob);
+  const a      = document.createElement('a');
+  a.href = url; a.download = `consolidado_${anio}${!isAnio ? '_' + MESES_NOM[mes-1] : ''}.xlsx`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+
+  btn.disabled = false; btn.innerHTML = '📥 Exportar Excel';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════ */
+(function init() {
+  const hoy = new Date();
+  document.getElementById('selAnio').value = String(hoy.getFullYear());
+  document.getElementById('selMes').value  = String(hoy.getMonth() + 1);
+  updateLabel();
+  setVista('anio');
+})();
+</script>
+</body>
+</html>

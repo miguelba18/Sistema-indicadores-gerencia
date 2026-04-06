@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Operaciones – Indicadores</title>
+  <link rel="stylesheet" href="../area-base.css">
+  <style>
+    :root { --area-color: #1565c0; --area-color-rgb: 21, 101, 192; }
+
+    /* ── ACTION BAR ──────────────────────────────────── */
+    .action-bar {
+      background: #fff;
+      border-bottom: 1px solid #dde4ef;
+      padding: 8px 20px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 13px; border-radius: 7px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: all .16s; font-family: inherit; white-space: nowrap;
+    }
+    .btn-primary { background: var(--area-color); color: #fff; border-color: var(--area-color); }
+    .btn-primary:hover { filter: brightness(1.12); }
+    .btn-outline { background: #fff; color: var(--area-color); border-color: var(--area-color); }
+    .btn-outline:hover { background: rgba(var(--area-color-rgb),.07); }
+    .btn-ghost  { background: #fff; color: #64748b; border-color: #cbd5e0; }
+    .btn-ghost:hover  { background: #f8fafc; }
+    .btn-danger { background: #fff; color: #dc2626; border-color: #fca5a5; }
+    .btn-danger:hover { background: #fef2f2; }
+    .action-sep { flex: 1; }
+    .save-status { font-size: 11.5px; color: #94a3b8; display: flex; align-items: center; gap: 4px; }
+    .save-status.ok   { color: #16a34a; }
+    .save-status.warn { color: #d97706; }
+
+    /* ── TABLE ───────────────────────────────────────── */
+    .table-wrap { padding: 18px 20px 0; overflow-x: auto; }
+
+    .tabla {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      min-width: 680px;
+    }
+
+    .tabla thead tr { background: var(--area-color); }
+    .tabla thead th {
+      color: #fff; padding: 9px 10px;
+      font-size: 10.5px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .5px;
+      white-space: nowrap;
+    }
+    .tabla thead th.tc { text-align: center; }
+
+    .tabla tbody tr.ind-row { border-bottom: 1px solid #e8eef6; }
+    .tabla tbody tr.ind-row:hover { background: #f7f9fd; }
+    .tabla tbody td { padding: 8px 10px; vertical-align: middle; }
+
+    /* Columnas */
+    .ci  { width: 38px; text-align: center; font-weight: 700; color: var(--area-color); font-size: 13px; }
+    .cp  { width: 54px; text-align: center; font-weight: 700; color: #374151; }
+    .cc  { width: 90px; text-align: center; font-weight: 600; }
+
+    /* Indicador cell */
+    .cind { line-height: 1.45; }
+    .grupo-lbl {
+      display: block; font-size: 10.5px; color: #6b7e96;
+      font-style: italic; margin-bottom: 3px; line-height: 1.35;
+      border-left: 3px solid rgba(var(--area-color-rgb),.3);
+      padding-left: 6px;
+    }
+    .sub-lbl { font-weight: 500; }
+    .tipo-badge {
+      display: inline-block; font-size: 9px;
+      padding: 1px 6px; border-radius: 10px;
+      font-weight: 700; letter-spacing: .3px;
+      margin-left: 5px; vertical-align: middle;
+    }
+    .tipo-menor { background: #fef3c7; color: #92400e; }
+
+    /* Toggle button */
+    .toggle-btn {
+      padding: 2px 9px;
+      border-radius: 5px;
+      border: 1.5px solid #d0d9e8;
+      background: #f8fafc;
+      cursor: pointer;
+      font-size: 11px;
+      color: #64748b;
+      font-family: inherit;
+      transition: all .15s;
+      margin-top: 1px;
+    }
+    .toggle-btn:hover {
+      background: #e8f0fb;
+      border-color: var(--area-color);
+      color: var(--area-color);
+    }
+    .toggle-btn.open {
+      background: rgba(var(--area-color-rgb),.1);
+      border-color: var(--area-color);
+      color: var(--area-color);
+      font-weight: 700;
+    }
+
+    /* ── DETAIL ROW ───────────────────────────────────── */
+    .det-row { display: none; }
+    .det-row.open { display: table-row; }
+
+    .det-cell {
+      padding: 0 !important;
+      background: #f0f5ff;
+    }
+
+    .det-inner {
+      border-top: 2px solid rgba(var(--area-color-rgb),.2);
+      border-bottom: 2px solid rgba(var(--area-color-rgb),.2);
+    }
+
+    .det-inner iframe {
+      width: 100%;
+      height: 400px;
+      border: none;
+      display: block;
+    }
+
+    /* ── TOTAL ROW ────────────────────────────────────── */
+    .row-total td {
+      background: #edf2fb;
+      border-top: 2px solid var(--area-color);
+      font-weight: 700;
+    }
+    .total-lbl { text-align: right; color: #374151; }
+    #tdTotalPeso { text-align: center; }
+    #tdTotalPunt { text-align: center; font-size: 15px; color: var(--area-color); }
+
+    /* ── SCORE CARD ───────────────────────────────────── */
+    .score-wrap { padding: 16px 20px 20px; }
+    .score-card {
+      background: #fff; border-radius: 12px; padding: 18px 22px;
+      display: flex; align-items: center; gap: 22px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.07);
+      flex-wrap: wrap;
+      border-top: 4px solid var(--area-color);
+    }
+    .sc-main { text-align: center; min-width: 80px; }
+    .sc-main .sc-num { font-size: 40px; font-weight: 800; color: var(--area-color); line-height: 1; }
+    .sc-main .sc-sub { font-size: 11px; color: #94a3b8; font-weight: 600; letter-spacing: .4px; margin-top: 3px; }
+    .sc-div { width: 1px; height: 56px; background: #e2e8f0; flex-shrink: 0; }
+    .sc-stats { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+    .sc-stat { text-align: center; }
+    .sc-stat .sv { font-size: 22px; font-weight: 700; line-height: 1; }
+    .sc-stat .sl { font-size: 10px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; margin-top: 3px; }
+    .c-verde { color: #16a34a; } .c-amari { color: #d97706; }
+    .c-rojo  { color: #dc2626; } .c-gris  { color: #94a3b8; }
+
+    /* ── TOAST ────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 20px; right: 20px;
+      background: #1e3a5c; color: #fff;
+      padding: 9px 16px; border-radius: 8px;
+      font-size: 12.5px; font-weight: 500;
+      box-shadow: 0 4px 14px rgba(0,0,0,.22);
+      transform: translateY(60px); opacity: 0;
+      transition: all .28s ease;
+      z-index: 999; pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.t-ok  { background: #15803d; }
+    .toast.t-err { background: #dc2626; }
+    .toast.t-inf { background: #1565c0; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="area-header">
+    <span class="area-title">⚙️ Operaciones</span>
+    <span class="area-badge">Indicadores de Gestión</span>
+  </div>
+
+  <!-- PERIOD BAR -->
+  <div class="period-bar">
+    <label>Año</label>
+    <select id="selAnio">
+      <option>2023</option><option>2024</option><option>2025</option><option selected>2026</option>
+    </select>
+    <label>Mes</label>
+    <select id="selMes">
+      <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+      <option value="4" selected>Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+      <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+      <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+    </select>
+    <span class="period-label" id="periodoLabel">Abril 2026</span>
+  </div>
+
+  <!-- ACTION BAR -->
+  <div class="action-bar">
+    <button class="btn btn-primary"  onclick="guardar()">💾 Guardar</button>
+    <button class="btn btn-outline"  onclick="exportJSON()">⬇ Exportar JSON</button>
+    <button class="btn btn-ghost"    onclick="fileInput.click()">⬆ Importar JSON</button>
+    <button class="btn btn-ghost"    onclick="exportCSV()">📊 Exportar Excel (CSV)</button>
+    <span class="action-sep"></span>
+    <button class="btn btn-danger"   onclick="limpiar()">🗑 Limpiar periodo</button>
+    <span class="save-status" id="saveStatus">Sin datos</span>
+  </div>
+
+  <input type="file" id="fileInput" accept=".json" style="display:none" onchange="importJSON(event)">
+
+  <!-- TABLE -->
+  <div class="table-wrap">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th class="tc">#</th>
+          <th>Indicador</th>
+          <th class="tc">Peso</th>
+          <th class="tc">Puntaje</th>
+          <th class="tc">Cumpl.&nbsp;%</th>
+          <th class="tc">Detalle</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- SCORE CARD -->
+  <div class="score-wrap">
+    <div class="score-card">
+      <div class="sc-main">
+        <div class="sc-num" id="scNum">—</div>
+        <div class="sc-sub">PUNTAJE / 100</div>
+      </div>
+      <div class="sc-div"></div>
+      <div class="sc-stats">
+        <div class="sc-stat"><div class="sv c-verde" id="cVerde">—</div><div class="sl">En meta</div></div>
+        <div class="sc-stat"><div class="sv c-amari" id="cAmari">—</div><div class="sl">En riesgo</div></div>
+        <div class="sc-stat"><div class="sv c-rojo"  id="cRojo">—</div><div class="sl">Fuera meta</div></div>
+        <div class="sc-stat"><div class="sv c-gris"  id="cSin">10</div><div class="sl">Sin datos</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════
+   INDICADORES
+══════════════════════════════════════════════════════ */
+const IND = [
+  { id:'1',  item:'1', peso:25, tipo:'mayor',
+    label:'Cumplimiento rentabilidad de los contratos' },
+  { id:'2',  item:'2', peso:15, tipo:'mayor',
+    label:'Cumplimiento de los presupuestos establecidos' },
+  { id:'3',  item:'3', peso:10, tipo:'mayor',
+    label:'Participación en las capacitaciones programadas' },
+  { id:'4',  item:'4', peso:10, tipo:'mayor',
+    label:'Seguimiento del cierre efectivo de la matriz RYOM' },
+  { id:'5',  item:'5', peso:10, tipo:'menor',
+    label:'Accidentes incapacitantes',
+    hint:'menor es mejor' },
+  { id:'6',  item:'6', peso:5,  tipo:'menor',
+    label:'Incidentes y/o accidentes vehiculares con desvío presupuestal',
+    hint:'menor es mejor' },
+  { id:'7',  item:'7', peso:10, tipo:'mayor',
+    label:'Apoyo en los procesos licitatorios' },
+  { id:'8a', item:'8', peso:5,  tipo:'mayor',
+    grupo:'Entrega oportuna de las hojas de entrada de la facturación y el cobro de los servicios adicionales (Max 60 días)',
+    grupoRows:2,
+    label:'Fecha límite de facturación no mayor al día 22 de cada mes' },
+  { id:'8b', item:'8', peso:5,  tipo:'mayor',
+    grupoChild:true,
+    label:'Facturación de conceptos adicionales no mayor a 60 días' },
+  { id:'9',  item:'9', peso:5,  tipo:'mayor',
+    label:'Flujo de caja' },
+];
+
+const MESES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
+               'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+/* ══════════════════════════════════════════════════════
+   PERIODO
+══════════════════════════════════════════════════════ */
+const $anio = () => document.getElementById('selAnio').value;
+const $mes  = () => document.getElementById('selMes').value;
+const $key  = () => `ind_op_${$anio()}_${$mes().padStart(2,'0')}`;
+
+function updateLabel() {
+  document.getElementById('periodoLabel').textContent =
+    `${MESES[+$mes()]} ${$anio()}`;
+}
+
+document.getElementById('selAnio').addEventListener('change', () => { cerrarTodos(); updateLabel(); cargar(); });
+document.getElementById('selMes').addEventListener('change',  () => { cerrarTodos(); updateLabel(); cargar(); });
+
+/* ══════════════════════════════════════════════════════
+   BUILD TABLE
+══════════════════════════════════════════════════════ */
+function buildTable() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+
+  IND.forEach(ind => {
+    /* ── Fila principal del indicador ── */
+    const tr = document.createElement('tr');
+    tr.className = 'ind-row';
+    tr.id = `row-${ind.id}`;
+
+    let labelHTML;
+    if (ind.grupo) {
+      labelHTML = `<span class="grupo-lbl">${ind.grupo}</span>
+                   <span class="sub-lbl">└ ${ind.label}</span>`;
+    } else if (ind.grupoChild) {
+      labelHTML = `<span class="sub-lbl">└ ${ind.label}</span>`;
+    } else {
+      labelHTML = ind.label;
+      if (ind.tipo === 'menor') {
+        labelHTML += ` <span class="tipo-badge tipo-menor" title="${ind.hint}">↓ menor</span>`;
+      }
+    }
+
+    let cells = '';
+
+    if (ind.grupoChild) {
+      cells += `<td class="ci"></td>`;
+    } else {
+      cells += `<td class="ci">${ind.item}</td>`;
+    }
+
+    cells += `<td class="cind">${labelHTML}</td>`;
+    cells += `<td class="cp tc">${ind.peso}</td>`;
+    cells += `<td class="cc tc" id="p_${ind.id}">—</td>`;
+    cells += `<td class="cc tc" id="c_${ind.id}">—</td>`;
+    cells += `<td class="tc" style="width:80px">
+                <button class="toggle-btn" id="btn-${ind.id}" onclick="toggleDet('${ind.id}')">▶ Ver</button>
+              </td>`;
+
+    tr.innerHTML = cells;
+    tbody.appendChild(tr);
+
+    /* ── Fila de detalle (colapsable) ── */
+    const trDet = document.createElement('tr');
+    trDet.className = 'det-row';
+    trDet.id = `det-${ind.id}`;
+    trDet.innerHTML = `
+      <td colspan="6" class="det-cell">
+        <div class="det-inner">
+          <iframe id="iframe-${ind.id}" data-src="indicadores/ind-${ind.id}.html"
+                  title="Detalle indicador ${ind.item}"></iframe>
+        </div>
+      </td>`;
+    tbody.appendChild(trDet);
+  });
+
+  /* ── Fila total ── */
+  const trTot = document.createElement('tr');
+  trTot.className = 'row-total';
+  trTot.innerHTML = `
+    <td colspan="2" class="total-lbl">TOTAL</td>
+    <td id="tdTotalPeso" class="tc">100</td>
+    <td id="tdTotalPunt" class="cc tc">—</td>
+    <td></td>
+    <td></td>`;
+  tbody.appendChild(trTot);
+}
+
+/* ══════════════════════════════════════════════════════
+   TOGGLE DETALLE
+══════════════════════════════════════════════════════ */
+function toggleDet(id) {
+  const det = document.getElementById(`det-${id}`);
+  const btn = document.getElementById(`btn-${id}`);
+  const iframe = document.getElementById(`iframe-${id}`);
+  const isOpen = det.classList.contains('open');
+
+  if (isOpen) {
+    det.classList.remove('open');
+    btn.classList.remove('open');
+    btn.textContent = '▶ Detalle';
+  } else {
+    det.classList.add('open');
+    btn.classList.add('open');
+    btn.textContent = '▼ Cerrar';
+    // Lazy-load: asignar src la primera vez
+    if (iframe.dataset.src) {
+      const src = iframe.dataset.src;
+      const url = `${src}?anio=${$anio()}&mes=${$mes()}`;
+      iframe.src = url;
+      delete iframe.dataset.src;
+
+
+
+    }
+  }
+}
+
+function cerrarTodos() {
+  IND.forEach(ind => {
+    const det  = document.getElementById(`det-${ind.id}`);
+    const btn  = document.getElementById(`btn-${ind.id}`);
+    const iframe = document.getElementById(`iframe-${ind.id}`);
+    if (det && det.classList.contains('open')) {
+      det.classList.remove('open');
+      btn.classList.remove('open');
+      btn.textContent = '▶ Detalle';
+      // Resetear iframe para que recargue con el nuevo periodo
+      iframe.src = '';
+      iframe.dataset.src = `indicadores/ind-${ind.id}.html`;
+    }
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   CÁLCULOS
+══════════════════════════════════════════════════════ */
+function updateReal(id, real) {
+  const ind  = IND.find(x => x.id === id);
+  const peso = ind.peso;
+
+  // real = % de cumplimiento enviado por el indicador (0-100)
+  const cump = Math.min(100, Math.max(0, real));
+  const punt = (cump / 100) * peso;
+
+  document.getElementById(`c_${id}`).textContent = cump.toFixed(1) + '%';
+  document.getElementById(`p_${id}`).textContent = punt.toFixed(2);
+
+  calcTotal();
+}
+
+function calcTotal() {
+  let total = 0, hasDat = false;
+  let verde = 0, amari = 0, rojo = 0, sin = 0;
+
+  IND.forEach(ind => {
+    const p = document.getElementById(`p_${ind.id}`).textContent;
+    if (p !== '—') {
+      total += parseFloat(p); hasDat = true;
+      const cv = parseFloat(document.getElementById(`c_${ind.id}`).textContent);
+      if (cv >= 80) verde++; else if (cv >= 60) amari++; else rojo++;
+    } else { sin++; }
+  });
+
+  document.getElementById('tdTotalPunt').textContent = hasDat ? total.toFixed(2) : '—';
+  document.getElementById('scNum').textContent        = hasDat ? total.toFixed(1) : '—';
+  document.getElementById('cVerde').textContent = verde || '—';
+  document.getElementById('cAmari').textContent = amari || '—';
+  document.getElementById('cRojo').textContent  = rojo  || '—';
+  document.getElementById('cSin').textContent   = sin;
+}
+
+/* ══════════════════════════════════════════════════════
+   MENSAJE DESDE IFRAMES (indicadores → tabla)
+══════════════════════════════════════════════════════ */
+window.addEventListener('message', (e) => {
+  const d = e.data;
+  if (!d || d.type !== 'setReal') return;
+  const { id, real, anio, mes } = d;
+  // Guardar en localStorage para persistencia
+  const rKey = `real_op_${id}_${anio}_${String(mes).padStart(2,'0')}`;
+  localStorage.setItem(rKey, real);
+  // Solo actualizar UI si el periodo coincide con el seleccionado
+  if (String(anio) === $anio() && String(mes) === $mes()) {
+    updateReal(id, real);
+    autoGuardar();
+  }
+});
+
+/* ══════════════════════════════════════════════════════
+   PERSISTENCIA
+══════════════════════════════════════════════════════ */
+function getDatos() {
+  const rows = {};
+  IND.forEach(ind => {
+    const p = document.getElementById(`p_${ind.id}`).textContent;
+    const c = document.getElementById(`c_${ind.id}`).textContent;
+    rows[ind.id] = { puntaje: p !== '—' ? p : null, cumpl: c !== '—' ? c : null };
+  });
+  return { area:'operaciones', anio:+$anio(), mes:+$mes(), savedAt:new Date().toISOString(), rows };
+}
+
+let autoTimer;
+function autoGuardar() {
+  clearTimeout(autoTimer);
+  autoTimer = setTimeout(() => {
+    localStorage.setItem($key(), JSON.stringify(getDatos()));
+    setStatus('✓ Auto-guardado', 'ok');
+  }, 500);
+}
+
+function guardar() {
+  localStorage.setItem($key(), JSON.stringify(getDatos()));
+  setStatus('✓ Guardado', 'ok');
+  toast('Datos guardados', 't-ok');
+}
+
+function cargar() {
+  limpiarUI();
+  // Cargar Real de cada indicador desde localStorage
+  IND.forEach(ind => {
+    const rKey = `real_op_${ind.id}_${$anio()}_${$mes().padStart(2,'0')}`;
+    const val = localStorage.getItem(rKey);
+    if (val !== null) updateReal(ind.id, parseFloat(val));
+  });
+  const raw = localStorage.getItem($key());
+  if (raw) {
+    setStatus('✓ Cargado', 'ok');
+  } else {
+    setStatus('Sin datos para este periodo', '');
+  }
+}
+
+function limpiarUI() {
+  IND.forEach(ind => {
+    document.getElementById(`c_${ind.id}`).textContent = '—';
+    document.getElementById(`p_${ind.id}`).textContent = '—';
+  });
+  document.getElementById('tdTotalPunt').textContent = '—';
+  document.getElementById('scNum').textContent       = '—';
+  document.getElementById('cVerde').textContent = '—';
+  document.getElementById('cAmari').textContent = '—';
+  document.getElementById('cRojo').textContent  = '—';
+  document.getElementById('cSin').textContent   = IND.length;
+}
+
+function limpiar() {
+  if (!confirm(`¿Limpiar datos de ${MESES[+$mes()]} ${$anio()}? No se puede deshacer.`)) return;
+  localStorage.removeItem($key());
+  IND.forEach(ind => {
+    localStorage.removeItem(`real_op_${ind.id}_${$anio()}_${$mes().padStart(2,'0')}`);
+  });
+  cerrarTodos();
+  limpiarUI();
+  setStatus('Sin datos para este periodo', '');
+  toast('Periodo limpiado', 't-inf');
+}
+
+/* ══════════════════════════════════════════════════════
+   EXPORT / IMPORT
+══════════════════════════════════════════════════════ */
+function exportJSON() {
+  // Incluir también los reales individuales
+  const payload = getDatos();
+  payload.reales = {};
+  IND.forEach(ind => {
+    const rKey = `real_op_${ind.id}_${$anio()}_${$mes().padStart(2,'0')}`;
+    const val = localStorage.getItem(rKey);
+    if (val !== null) payload.reales[ind.id] = parseFloat(val);
+  });
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  triggerDownload(blob, `operaciones_${$anio()}_${$mes().padStart(2,'0')}.json`);
+  toast('JSON exportado ✓', 't-ok');
+}
+
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const obj = JSON.parse(ev.target.result);
+      if (obj.area !== 'operaciones') { toast('El archivo no es de Operaciones', 't-err'); return; }
+      if (obj.anio) document.getElementById('selAnio').value = obj.anio;
+      if (obj.mes)  document.getElementById('selMes').value  = obj.mes;
+      cerrarTodos(); updateLabel(); limpiarUI();
+      // Restaurar reales individuales
+      if (obj.reales) {
+        Object.entries(obj.reales).forEach(([id, real]) => {
+          const rKey = `real_op_${id}_${obj.anio}_${String(obj.mes).padStart(2,'0')}`;
+          localStorage.setItem(rKey, real);
+          if (String(obj.anio) === $anio() && String(obj.mes) === $mes()) {
+            updateReal(id, real);
+          }
+        });
+      }
+      guardar();
+      toast(`Importado: ${MESES[obj.mes]} ${obj.anio}`, 't-ok');
+    } catch { toast('Error al leer el archivo', 't-err'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function exportCSV() {
+  const per = `${MESES[+$mes()]} ${$anio()}`;
+  const rows = [
+    ['OPERACIONES – INDICADORES DE GESTIÓN'],
+    [`Periodo: ${per}`],
+    [`Exportado: ${new Date().toLocaleString('es-CO')}`],
+    [],
+    ['#','Indicador','Peso','Puntaje','Cumpl. %'],
+  ];
+  IND.forEach(ind => {
+    const p = document.getElementById(`p_${ind.id}`).textContent;
+    const c = document.getElementById(`c_${ind.id}`).textContent;
+    const lbl = (ind.grupo ? `[${ind.grupo}] ` : '') +
+                (ind.grupoChild || ind.grupo ? '└ ' : '') + ind.label;
+    rows.push([ind.item, lbl, ind.peso, p, c]);
+  });
+  const tot = document.getElementById('tdTotalPunt').textContent;
+  rows.push([]); rows.push(['','TOTAL','100',tot,'']);
+  const csv = rows.map(r => r.map(c => `"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  triggerDownload(blob, `operaciones_${$anio()}_${$mes().padStart(2,'0')}.csv`);
+  toast('CSV exportado – ábrelo en Excel', 't-ok');
+}
+
+function triggerDownload(blob, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
+/* ══════════════════════════════════════════════════════
+   UI HELPERS
+══════════════════════════════════════════════════════ */
+function setStatus(txt, cls) {
+  const el = document.getElementById('saveStatus');
+  el.textContent = txt; el.className = 'save-status ' + cls;
+}
+let toastTimer;
+function toast(msg, cls='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = `toast show ${cls}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = 'toast'; }, 3000);
+}
+
+/* ══════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════ */
+(function init() {
+  const hoy = new Date();
+  document.getElementById('selAnio').value = String(hoy.getFullYear());
+  document.getElementById('selMes').value  = String(hoy.getMonth() + 1);
+  updateLabel();
+  buildTable();
+  cargar();
+})();
+</script>
+</body>
+</html>

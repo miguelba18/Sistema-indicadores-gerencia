@@ -1,0 +1,176 @@
+/* ── BASE STYLES COMPARTIDOS PARA TODAS LAS ÁREAS ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  /* Sobreescribir por área */
+  --area-color:     #1a3a5c;
+  --area-color-rgb: 26, 58, 92;
+  --area-light:     #eef2f7;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #eef2f7;
+  min-height: 100vh;
+  color: #2d3748;
+}
+
+/* ── AREA HEADER ─────────────────────────────────── */
+.area-header {
+  background: var(--area-color);
+  color: #fff;
+  padding: 13px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.area-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.area-badge {
+  font-size: 10.5px;
+  background: rgba(255,255,255,.18);
+  border: 1px solid rgba(255,255,255,.25);
+  padding: 3px 11px;
+  border-radius: 20px;
+  letter-spacing: .3px;
+}
+
+/* ── PERIOD BAR ──────────────────────────────────── */
+.period-bar {
+  background: #fff;
+  border-bottom: 1px solid #dde4ef;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.period-bar label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #8a9ab5;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+}
+
+.period-bar select {
+  padding: 5px 10px;
+  border: 1.5px solid #d0d9e8;
+  border-radius: 7px;
+  font-size: 13px;
+  color: #2d3748;
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+  transition: border-color .2s;
+  font-family: inherit;
+}
+
+.period-bar select:focus {
+  border-color: var(--area-color);
+}
+
+.period-label {
+  margin-left: auto;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--area-color);
+  background: rgba(var(--area-color-rgb), .08);
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+/* ── CONTENT WRAPPER ─────────────────────────────── */
+.content {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ── EMPTY STATE ─────────────────────────────────── */
+.empty-state {
+  background: #fff;
+  border-radius: 14px;
+  padding: 64px 32px;
+  text-align: center;
+  border: 2px dashed #d0d9e8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.empty-icon {
+  font-size: 52px;
+  line-height: 1;
+}
+
+.empty-state h3 {
+  font-size: 16px;
+  color: #4a5568;
+  font-weight: 600;
+}
+
+.empty-state p {
+  font-size: 13px;
+  color: #8a9ab5;
+  max-width: 380px;
+  line-height: 1.6;
+}
+
+.empty-state .tag {
+  font-size: 11px;
+  background: rgba(var(--area-color-rgb), .1);
+  color: var(--area-color);
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  letter-spacing: .3px;
+}
+
+/* ── INFO CARDS ROW ──────────────────────────────── */
+.info-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+}
+
+.info-card {
+  background: #fff;
+  border-radius: 11px;
+  padding: 16px 18px;
+  border-left: 4px solid var(--area-color);
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+
+.info-card .card-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #8a9ab5;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 6px;
+}
+
+.info-card .card-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--area-color);
+}
+
+.info-card .card-sub {
+  font-size: 11px;
+  color: #a0aec0;
+  margin-top: 2px;
+}

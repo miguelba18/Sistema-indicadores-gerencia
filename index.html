@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Indicadores</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary:      #1a3a5c;
+      --primary-mid:  #22507a;
+      --primary-light:#2a6299;
+      --accent:       #e8a020;
+      --accent-dim:   rgba(232, 160, 32, 0.18);
+      --bg:           #eef2f7;
+      --header-h:     68px;
+      --tab-h:        44px;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+    }
+
+    /* ── HEADER ─────────────────────────────────────── */
+    header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--header-h);
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.35);
+    }
+
+    .logo {
+      width: 42px; height: 42px;
+      background: var(--accent);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 19px; font-weight: 700; color: #1a3a5c;
+      flex-shrink: 0;
+      letter-spacing: -1px;
+    }
+
+    .header-text h1 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: .4px;
+    }
+
+    .header-text p {
+      font-size: 11.5px;
+      color: rgba(255,255,255,.55);
+      margin-top: 1px;
+    }
+
+    .header-right {
+      margin-left: auto;
+      font-size: 11.5px;
+      color: rgba(255,255,255,.45);
+      text-align: right;
+      line-height: 1.5;
+    }
+
+    /* ── TABS ────────────────────────────────────────── */
+    nav.tabs {
+      position: fixed;
+      top: var(--header-h); left: 0; right: 0; z-index: 99;
+      height: var(--tab-h);
+      background: var(--primary-mid);
+      display: flex;
+      overflow-x: auto;
+      scrollbar-width: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    }
+    nav.tabs::-webkit-scrollbar { display: none; }
+
+    .tab-btn {
+      height: var(--tab-h);
+      padding: 0 18px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,.65);
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      border-bottom: 3px solid transparent;
+      transition: background .18s, color .18s, border-color .18s;
+      letter-spacing: .25px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tab-btn:hover {
+      background: rgba(255,255,255,.09);
+      color: #fff;
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      border-bottom-color: var(--accent);
+      background: rgba(255,255,255,.11);
+    }
+
+    .tab-btn.tab-consolidado {
+      background: var(--accent-dim);
+      color: var(--accent);
+      border-left: 1px solid rgba(232,160,32,.25);
+      margin-left: auto;
+    }
+
+    .tab-btn.tab-consolidado.active {
+      background: rgba(232,160,32,.28);
+      border-bottom-color: var(--accent);
+      color: #fff;
+    }
+
+    /* ── CONTENT AREA ────────────────────────────────── */
+    .main {
+      position: fixed;
+      top: calc(var(--header-h) + var(--tab-h));
+      left: 0; right: 0; bottom: 0;
+    }
+
+    .panel {
+      display: none;
+      position: absolute;
+      inset: 0;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .panel iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    /* ── LOADING OVERLAY ─────────────────────────────── */
+    .loading {
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: #6b7e96;
+      font-size: 13px;
+      pointer-events: none;
+      transition: opacity .3s;
+    }
+
+    .spinner {
+      width: 34px; height: 34px;
+      border: 3px solid #d1dce8;
+      border-top-color: var(--primary-light);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .panel.loaded .loading { opacity: 0; }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">SI</div>
+    <div class="header-text">
+      <h1>Sistema de Indicadores</h1>
+      <p>Gestión y seguimiento de indicadores por área</p>
+    </div>
+    <div class="header-right">
+      <span id="fechaHoy"></span>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="operaciones">⚙️ Operaciones</button>
+    <button class="tab-btn" data-tab="gestion-humana">👥 Gestión Humana</button>
+    <button class="tab-btn" data-tab="hseq">🛡️ HSEQ</button>
+    <button class="tab-btn" data-tab="financiera">💼 Financiera</button>
+    <button class="tab-btn" data-tab="contabilidad">📊 Contabilidad</button>
+    <button class="tab-btn" data-tab="compras">🛒 Compras</button>
+    <button class="tab-btn" data-tab="gerencia">🏛️ Gerencia</button>
+    <button class="tab-btn tab-consolidado" data-tab="consolidado">★ Consolidado</button>
+  </nav>
+
+  <!-- PANELS -->
+  <main class="main">
+
+    <div class="panel active" id="panel-operaciones">
+      <div class="loading"><div class="spinner"></div>Cargando...</div>
+      <iframe src="operaciones/operaciones.html" onload="panelLoaded(this)"></iframe>
+    </div>
+
+    <div class="panel" id="panel-gestion-humana">
+      <div class="loading"><div class="spinner"></div>Cargando...</div>
+      <iframe data-src="gestion-humana/gestion-humana.html" onload="panelLoaded(this)"></iframe>
+    </div>
+
+    <div class="panel" id="panel-hseq">
+      <div class="loading"><div class="spinner"></div>Cargando...</div>
+      <iframe data-src="hseq/hseq.html" onload="panelLoaded(this)"></iframe>
+    </div>
+
+    <div class="panel" id="panel-financiera">
+      <div class="loading"><div class="spinner"></div>Cargando...</div>
+      <iframe data-src="financiera/financiera.html" onload="panelLoaded(this)"></iframe>
+    </div>
+
+    <div class="panel" id="panel-contabilidad">
+      <div class="loading"><div class="spinner"></div>Cargando...</div>
+      <iframe data-src="contabilidad/contabilidad.html" onload="panelLoaded(this)"></iframe>
+    </div>
+
+    <div class="panel" id="panel-compras">
+      <div class="loading"><div class="spinner"></div>Cargando...</div>
+      <iframe data-src="compras/compras.html" onload="panelLoaded(this)"></iframe>
+    </div>
+
+    <div class="panel" id="panel-gerencia">
+      <div class="loading"><div class="spinner"></div>Cargando...</div>
+      <iframe data-src="gerencia/gerencia.html" onload="panelLoaded(this)"></iframe>
+    </div>
+
+    <div class="panel" id="panel-consolidado">
+      <div class="loading"><div class="spinner"></div>Cargando...</div>
+      <iframe data-src="consolidado.html" onload="panelLoaded(this)"></iframe>
+    </div>
+
+  </main>
+
+  <script>
+    function panelLoaded(iframe) {
+      iframe.closest('.panel').classList.add('loaded');
+    }
+
+    // Fecha en header
+    const hoy = new Date();
+    const opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('fechaHoy').textContent =
+      hoy.toLocaleDateString('es-CO', opts);
+
+    // Tab switching con lazy-load de iframes
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.tab;
+
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+
+        btn.classList.add('active');
+        const panel = document.getElementById('panel-' + target);
+        panel.classList.add('active');
+
+        // Lazy-load: cargar iframe solo cuando se activa el tab
+        const iframe = panel.querySelector('iframe[data-src]');
+        if (iframe) {
+          iframe.src = iframe.dataset.src;
+          iframe.removeAttribute('data-src');
+        }
+      });
+    });
+
+  </script>
+
+</body>
+</html>

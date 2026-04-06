@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Indicador 4 – Matriz RYOM</title>
+  <link rel="stylesheet" href="../../area-base.css">
+  <style>
+    :root { --area-color: #1565c0; --area-color-rgb: 21, 101, 192; }
+    body { background: #f0f5ff; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 12.5px; color: #222; margin: 0; }
+
+    .ind-header {
+      background: var(--area-color); color: #fff;
+      padding: 10px 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .ind-num   { background: rgba(255,255,255,.2); font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 10px; flex-shrink: 0; }
+    .ind-title { font-size: 13px; font-weight: 600; flex: 1; }
+    .ind-peso  { font-size: 12px; color: rgba(255,255,255,.75); flex-shrink: 0; }
+
+    .periodo-bar {
+      background: #dce8f5; padding: 5px 18px; font-size: 11.5px; color: #1a3a5c;
+      border-bottom: 1px solid #b8cfe8; display: flex; align-items: center; gap: 8px;
+    }
+    .periodo-tag {
+      background: var(--area-color); color: #fff;
+      font-size: 10.5px; font-weight: 700; padding: 1px 9px; border-radius: 10px;
+    }
+    .nota-anual { font-size: 10.5px; color: #6b7e96; font-style: italic; padding: 6px 18px 2px; }
+
+    .tbl-wrap { padding: 10px 18px 14px; overflow-x: auto; }
+
+    table.ind-tabla {
+      width: 100%; border-collapse: collapse; min-width: 860px; font-size: 12px;
+    }
+    .ind-tabla th {
+      background: var(--area-color); color: #fff; padding: 7px 8px;
+      text-align: center; border: 1px solid rgba(255,255,255,.25);
+      font-weight: 600; font-size: 11px; line-height: 1.35;
+    }
+    .ind-tabla td { border: 1px solid #c5d5e8; padding: 7px 9px; vertical-align: middle; }
+
+    .td-label   { background: #f5f8ff !important; font-size: 11.5px; color: #374151; font-weight: 500; min-width: 160px; line-height: 1.5; }
+    .td-formula { background: #e8edf5 !important; font-size: 10.5px; font-style: italic; color: #374151; text-align: center; line-height: 1.45; min-width: 165px; }
+    .td-meta    { text-align: center; font-weight: 700; font-size: 14px; color: var(--area-color); background: #eef4fc !important; width: 70px; }
+    .td-soporte { background: #eef4fc !important; text-align: center; min-width: 140px; }
+    .td-soporte textarea {
+      width: 100%; min-height: 60px; resize: vertical;
+      border: 1px solid #c5d5e8; border-radius: 4px;
+      padding: 4px 6px; font-size: 11px; font-family: inherit;
+      background: #fff; color: #222; box-sizing: border-box;
+    }
+
+    .inp-num {
+      width: 80px; text-align: center;
+      border: 1px solid #c5d5e8; border-radius: 4px;
+      padding: 5px 6px; font-size: 14px; font-weight: 700;
+      background: #fff;
+      -moz-appearance: textfield; appearance: textfield;
+    }
+    .inp-num::-webkit-inner-spin-button { display: none; }
+    .td-num { text-align: center; min-width: 110px; }
+
+    /* Resultado: muestra el % PENDIENTE (0% = todo cerrado = verde) */
+    .td-resultado { text-align: center; min-width: 90px; font-weight: 700; }
+    .td-resultado.verde { background: #d4edda !important; color: #155724; }
+    .td-resultado.amari { background: #fff3cd !important; color: #856404; }
+    .td-resultado.rojo  { background: #f8d7da !important; color: #721c24; }
+    .td-resultado.vacio { color: #94a3b8; }
+    .res-pct   { font-size: 16px; font-weight: 800; }
+    .res-sub   { font-size: 10.5px; font-weight: 500; margin-top: 2px; }
+    .res-label { font-size: 10px; font-weight: 400; opacity: .75; margin-top: 1px; }
+
+    .td-peso-max { text-align: center; font-weight: 800; font-size: 18px; color: var(--area-color); background: #eef4fc !important; width: 78px; }
+
+    .td-puntaje { text-align: center; min-width: 90px; }
+    .td-puntaje.verde { background: #d4edda !important; }
+    .td-puntaje.amari { background: #fff3cd !important; }
+    .td-puntaje.rojo  { background: #f8d7da !important; }
+    .td-puntaje.vacio { }
+    .punt-val   { font-size: 18px; font-weight: 800; }
+    .punt-label { font-size: 10px; opacity: .75; margin-top: 2px; }
+    .td-puntaje.verde .punt-val { color: #155724; }
+    .td-puntaje.amari .punt-val { color: #856404; }
+    .td-puntaje.rojo  .punt-val { color: #721c24; }
+    .td-puntaje.vacio .punt-val { color: #94a3b8; }
+
+    .punt-adj { display: flex; align-items: center; gap: 3px; justify-content: center; margin-top: 6px; flex-wrap: wrap; }
+    .adj-lbl  { font-size: 9px; color: #94a3b8; }
+    .inp-adj  { width: 52px; text-align: center; font-size: 11px; border: 1px solid #c5d5e8; border-radius: 3px; padding: 2px 4px; background: #fff; -moz-appearance: textfield; appearance: textfield; }
+    .inp-adj::-webkit-inner-spin-button { display: none; }
+    .inp-adj.active { border-color: #f59e0b; background: #fffbeb; }
+    .btn-adj-reset { background: none; border: none; font-size: 10px; color: #f59e0b; cursor: pointer; padding: 0; }
+    .btn-adj-reset:hover { color: #d97706; text-decoration: underline; }
+    .override-badge { font-size: 9px; color: #92400e; background: #fef3c7; padding: 1px 5px; border-radius: 3px; margin-top: 3px; }
+  </style>
+</head>
+<body>
+
+  <div class="ind-header">
+    <span class="ind-num">Ítem 4</span>
+    <span class="ind-title">Seguimiento del cierre efectivo de la matriz RYOM</span>
+    <span class="ind-peso">Peso: 10</span>
+  </div>
+
+  <div class="periodo-bar">
+    Período: <span class="periodo-tag" id="periodoTag">—</span>
+  </div>
+
+  <div class="nota-anual">ℹ️ Resultado = % hallazgos pendientes. Si cierras todos → 0% pendiente → puntaje completo. Sin hallazgos abiertos = cumple por defecto.</div>
+
+  <div class="tbl-wrap">
+    <table class="ind-tabla">
+      <thead>
+        <tr>
+          <th>Indicador</th>
+          <th>Fórmula</th>
+          <th>Meta<br>2026</th>
+          <th>Soporte a anexar</th>
+          <th>No. Hallazgos<br>inherentes al área</th>
+          <th>No. De hallazgos<br>cerrados</th>
+          <th>Resultado</th>
+          <th>Puntaje<br>Máx</th>
+          <th>Puntaje<br>asignado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-label">Seguimiento del cierre efectivo de la matriz RYOM</td>
+          <td class="td-formula">(No. De hallazgos gestionados y validados mediante matriz RYOM / No. Total de hallazgos inherentes al área) × 100</td>
+          <td class="td-meta">100%</td>
+          <td class="td-soporte">
+            <textarea id="soporte" oninput="onSoporte()"></textarea>
+          </td>
+          <td class="td-num">
+            <input class="inp-num" type="number" id="inherentes"
+              oninput="onChange()" placeholder="0" min="0" step="1">
+            <div style="font-size:10px;color:#6b7e96;margin-top:2px">abiertos</div>
+          </td>
+          <td class="td-num">
+            <input class="inp-num" type="number" id="cerrados"
+              oninput="onChange()" placeholder="0" min="0" step="1">
+            <div style="font-size:10px;color:#6b7e96;margin-top:2px">cerrados</div>
+          </td>
+          <td class="td-resultado vacio" id="tdResultado">
+            <div class="res-pct">—</div>
+            <div class="res-sub"></div>
+            <div class="res-label"></div>
+          </td>
+          <td class="td-peso-max">10</td>
+          <td class="td-puntaje vacio" id="tdPuntaje">
+            <div class="punt-val" id="puntVal">—</div>
+            <div class="punt-label">de 10</div>
+            <div class="punt-adj">
+              <span class="adj-lbl">Ajuste:</span>
+              <input type="number" id="puntOverride" class="inp-adj"
+                placeholder="auto" step="0.01" min="0" max="10" onchange="onOverride()">
+              <button class="btn-adj-reset" id="btnReset"
+                onclick="resetOverride()" style="display:none">↺ auto</button>
+            </div>
+            <div class="override-badge" id="overrideBadge" style="display:none">✎ Ajustado</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const params  = new URLSearchParams(location.search);
+    const ANIO    = parseInt(params.get('anio')) || new Date().getFullYear();
+    const MES     = parseInt(params.get('mes'))  || (new Date().getMonth() + 1);
+    const MES_PAD = String(MES).padStart(2, '0');
+    const PESO    = 10;
+
+    const MESES_NOM = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                       'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    document.getElementById('periodoTag').textContent = `${MESES_NOM[MES - 1]} ${ANIO}`;
+
+    const CFG_KEY = `ind4_config_${ANIO}`;
+    const DAT_KEY = `ind4_data_${ANIO}_${MES_PAD}`;
+    const OVR_KEY = `ind4_override_${ANIO}_${MES_PAD}`;
+
+    const DEF_SOPORTE = 'Ver matriz RYOM (Plan de acción)';
+    let puntajeOverride = null;
+
+    function saveOverride() {
+      if (puntajeOverride !== null) localStorage.setItem(OVR_KEY, puntajeOverride);
+      else localStorage.removeItem(OVR_KEY);
+    }
+    function onOverride() {
+      const el = document.getElementById('puntOverride');
+      let v = el.value !== '' ? parseFloat(el.value) : null;
+      if (v !== null) { if (v < 0) v = 0; if (v > PESO) { v = PESO; el.value = PESO; } }
+      puntajeOverride = v;
+      saveOverride(); updateOverrideUI(); calcYRender();
+    }
+    function resetOverride() {
+      puntajeOverride = null;
+      document.getElementById('puntOverride').value = '';
+      saveOverride(); updateOverrideUI(); calcYRender();
+    }
+    function updateOverrideUI() {
+      const active = puntajeOverride !== null;
+      document.getElementById('puntOverride').classList.toggle('active', active);
+      document.getElementById('btnReset').style.display      = active ? 'inline' : 'none';
+      document.getElementById('overrideBadge').style.display = active ? 'block'  : 'none';
+    }
+
+    let cfg, dat;
+
+    function loadAll() {
+      const sc = localStorage.getItem(CFG_KEY);
+      cfg = sc ? JSON.parse(sc) : { soporte: DEF_SOPORTE };
+
+      const sd = localStorage.getItem(DAT_KEY);
+      dat = sd ? JSON.parse(sd) : { inherentes: '', cerrados: '' };
+
+      document.getElementById('soporte').value    = cfg.soporte || DEF_SOPORTE;
+      document.getElementById('inherentes').value = dat.inherentes || '';
+      document.getElementById('cerrados').value   = dat.cerrados   || '';
+
+      const ov = localStorage.getItem(OVR_KEY);
+      puntajeOverride = ov !== null ? parseFloat(ov) : null;
+      if (puntajeOverride !== null) document.getElementById('puntOverride').value = puntajeOverride;
+      updateOverrideUI();
+    }
+
+    function saveCfg() { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
+    function saveDat() { localStorage.setItem(DAT_KEY, JSON.stringify(dat)); }
+
+    // ── Semáforo ──────────────────────────────────────────────────────────────
+    // achievement = % cerrados (0–100). Verde ≥ 80, amarillo 60–79, rojo < 60
+    function semClass(achievement) {
+      if (achievement === null) return 'vacio';
+      if (achievement >= 80) return 'verde';
+      if (achievement >= 60) return 'amari';
+      return 'rojo';
+    }
+
+    // ── Cálculo y render ──────────────────────────────────────────────────────
+    function calcYRender() {
+      const inh = parseInt(document.getElementById('inherentes').value) || 0;
+      const cer = parseInt(document.getElementById('cerrados').value)   || 0;
+
+      // pendientes = inherentes - cerrados (no puede ser negativo)
+      const pendientes = Math.max(0, inh - cer);
+
+      // % pendiente (0% = todo cerrado = cumple)
+      const pctPendiente = inh > 0 ? (pendientes / inh) * 100 : 0;
+
+      // achievement = % cerrado (usado para puntaje y color)
+      const achievement = inh > 0 ? Math.min((cer / inh) * 100, 100) : 100;
+
+      const puntaje = (achievement / 100) * PESO;
+      const cls     = semClass(achievement);
+
+      // Resultado: muestra pendientes y % cerrado
+      const elR = document.getElementById('tdResultado');
+      elR.className = `td-resultado ${cls}`;
+      if (inh === 0 && cer === 0) {
+        // Sin hallazgos abiertos
+        elR.innerHTML = `<div class="res-pct">0%</div>
+          <div class="res-sub">0 pendientes</div>
+          <div class="res-label">✓ Sin hallazgos abiertos</div>`;
+      } else {
+        const cierreLabel = achievement >= 100 ? '✓ Todos cerrados'
+                          : achievement >= 80  ? '~ Mayoría cerrados'
+                          : achievement >= 60  ? '⚠ En progreso'
+                          : '✗ Varios pendientes';
+        elR.innerHTML = `<div class="res-pct">${pctPendiente.toFixed(0)}% pend.</div>
+          <div class="res-sub">${pendientes} de ${inh} abiertos</div>
+          <div class="res-label">${cierreLabel} (${achievement.toFixed(1)}% cerrado)</div>`;
+      }
+
+      // Puntaje (override o auto)
+      const effPuntaje = puntajeOverride !== null ? puntajeOverride : puntaje;
+      const effCls     = semClass((effPuntaje / PESO) * 100);
+      const elP = document.getElementById('tdPuntaje');
+      elP.className = `td-puntaje ${effCls}`;
+      document.getElementById('puntVal').textContent = effPuntaje.toFixed(2);
+
+      // postMessage
+      const real = Math.round((effPuntaje / PESO) * 1000) / 10;
+      parent.postMessage({ type: 'setReal', id: '4', real, anio: ANIO, mes: MES }, '*');
+    }
+
+    // ── Handlers ─────────────────────────────────────────────────────────────
+    let saveTimer;
+    function schedSave() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => { saveCfg(); saveDat(); }, 600);
+    }
+
+    function onChange() {
+      dat.inherentes = parseInt(document.getElementById('inherentes').value) || '';
+      dat.cerrados   = parseInt(document.getElementById('cerrados').value)   || '';
+      schedSave();
+      calcYRender();
+    }
+    function onSoporte() {
+      cfg.soporte = document.getElementById('soporte').value;
+      schedSave();
+    }
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    loadAll();
+    calcYRender();
+  </script>
+<script src="../../notas.js"></script></body>
+</html>

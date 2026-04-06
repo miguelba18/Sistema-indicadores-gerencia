@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Indicador 6 – Incidentes vehiculares</title>
+  <link rel="stylesheet" href="../../area-base.css">
+  <style>
+    :root { --area-color: #1565c0; --area-color-rgb: 21, 101, 192; }
+    body { background: #f0f5ff; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 12.5px; color: #222; margin: 0; }
+
+    .ind-header {
+      background: var(--area-color); color: #fff;
+      padding: 10px 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .ind-num   { background: rgba(255,255,255,.2); font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 10px; flex-shrink: 0; }
+    .ind-title { font-size: 13px; font-weight: 600; flex: 1; }
+    .ind-peso  { font-size: 12px; color: rgba(255,255,255,.75); flex-shrink: 0; }
+    .menor-badge { background: #fef3c7; color: #92400e; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; flex-shrink: 0; }
+
+    .periodo-bar {
+      background: #dce8f5; padding: 5px 18px; font-size: 11.5px; color: #1a3a5c;
+      border-bottom: 1px solid #b8cfe8; display: flex; align-items: center; gap: 8px;
+    }
+    .periodo-tag { background: var(--area-color); color: #fff; font-size: 10.5px; font-weight: 700; padding: 1px 9px; border-radius: 10px; }
+
+    .nota-anual { font-size: 10.5px; color: #6b7e96; font-style: italic; padding: 6px 18px 2px; }
+
+    .tbl-wrap { padding: 10px 18px 14px; overflow-x: auto; }
+
+    table.ind-tabla { width: 100%; border-collapse: collapse; min-width: 780px; font-size: 12px; }
+    .ind-tabla th {
+      background: var(--area-color); color: #fff; padding: 7px 8px;
+      text-align: center; border: 1px solid rgba(255,255,255,.25);
+      font-weight: 600; font-size: 11px; line-height: 1.35;
+    }
+    .ind-tabla td { border: 1px solid #c5d5e8; padding: 7px 9px; vertical-align: middle; }
+
+    .td-label   { background: #f5f8ff !important; font-size: 11.5px; color: #374151; font-weight: 500; min-width: 160px; line-height: 1.5; }
+    .td-formula {
+      background: #e8edf5 !important; font-size: 10.5px; font-style: italic;
+      color: #374151; text-align: center; line-height: 1.45; min-width: 165px;
+    }
+    .td-formula textarea {
+      width: 100%; min-height: 52px; resize: vertical;
+      border: 1px solid #c5d5e8; border-radius: 4px;
+      padding: 4px 6px; font-size: 10.5px; font-style: italic; font-family: inherit;
+      background: #f8fafc; color: #374151; box-sizing: border-box;
+    }
+    .td-meta-edit { text-align: center; background: #eef4fc !important; width: 70px; }
+    .inp-meta {
+      width: 52px; text-align: center; font-weight: 700; font-size: 15px;
+      border: 1px solid #c5d5e8; border-radius: 4px;
+      padding: 4px 5px; background: #fff;
+      -moz-appearance: textfield; appearance: textfield;
+    }
+    .inp-meta::-webkit-inner-spin-button { display: none; }
+    .td-soporte { background: #eef4fc !important; text-align: center; min-width: 130px; }
+    .td-soporte textarea {
+      width: 100%; min-height: 52px; resize: vertical;
+      border: 1px solid #c5d5e8; border-radius: 4px;
+      padding: 4px 6px; font-size: 11px; font-family: inherit;
+      background: #fff; color: #222; box-sizing: border-box;
+    }
+
+    .td-num { text-align: center; min-width: 100px; }
+    .inp-num {
+      width: 80px; text-align: center;
+      border: 1px solid #c5d5e8; border-radius: 4px;
+      padding: 5px 6px; font-size: 20px; font-weight: 800; background: #fff;
+      -moz-appearance: textfield; appearance: textfield;
+    }
+    .inp-num::-webkit-inner-spin-button { display: none; }
+
+    .td-resultado { text-align: center; min-width: 120px; }
+    .td-resultado.cumple    { background: #d4edda !important; color: #155724; }
+    .td-resultado.no-cumple { background: #f8d7da !important; color: #721c24; }
+    .td-resultado.vacio     { color: #94a3b8; }
+    .res-icon  { font-size: 22px; line-height: 1; }
+    .res-text  { font-size: 11.5px; font-weight: 600; margin-top: 3px; }
+    .res-sub   { font-size: 10px; opacity: .75; margin-top: 1px; }
+
+    .td-peso-max { text-align: center; font-weight: 800; font-size: 18px; color: var(--area-color); background: #eef4fc !important; width: 78px; }
+
+    .td-puntaje { text-align: center; min-width: 90px; }
+    .td-puntaje.cumple    { background: #d4edda !important; }
+    .td-puntaje.no-cumple { background: #f8d7da !important; }
+    .td-puntaje.vacio     { }
+    .punt-val   { font-size: 18px; font-weight: 800; }
+    .punt-label { font-size: 10px; opacity: .75; margin-top: 2px; }
+    .td-puntaje.cumple    .punt-val { color: #155724; }
+    .td-puntaje.no-cumple .punt-val { color: #721c24; }
+    .td-puntaje.vacio     .punt-val { color: #94a3b8; }
+
+    .punt-adj { display: flex; align-items: center; gap: 3px; justify-content: center; margin-top: 6px; flex-wrap: wrap; }
+    .adj-lbl  { font-size: 9px; color: #94a3b8; }
+    .inp-adj  { width: 52px; text-align: center; font-size: 11px; border: 1px solid #c5d5e8; border-radius: 3px; padding: 2px 4px; background: #fff; -moz-appearance: textfield; appearance: textfield; }
+    .inp-adj::-webkit-inner-spin-button { display: none; }
+    .inp-adj.active { border-color: #f59e0b; background: #fffbeb; }
+    .btn-adj-reset { background: none; border: none; font-size: 10px; color: #f59e0b; cursor: pointer; padding: 0; }
+    .btn-adj-reset:hover { color: #d97706; text-decoration: underline; }
+    .override-badge { font-size: 9px; color: #92400e; background: #fef3c7; padding: 1px 5px; border-radius: 3px; margin-top: 3px; }
+  </style>
+</head>
+<body>
+
+  <div class="ind-header">
+    <span class="ind-num">Ítem 6</span>
+    <span class="ind-title">Incidentes y/o accidentes vehiculares con desvío presupuestal</span>
+    <span class="menor-badge">↓ Menor es mejor</span>
+    <span class="ind-peso">Peso: 5</span>
+  </div>
+
+  <div class="periodo-bar">
+    Período: <span class="periodo-tag" id="periodoTag">—</span>
+  </div>
+
+  <div class="nota-anual">ℹ️ Si el número de incidentes es igual a la meta (0) → cumple y obtiene el puntaje completo. Cualquier valor mayor → no cumple → 0 puntos.</div>
+
+  <div class="tbl-wrap">
+    <table class="ind-tabla">
+      <thead>
+        <tr>
+          <th>Indicador</th>
+          <th>Fórmula</th>
+          <th>Meta<br>2026</th>
+          <th>Soporte a anexar</th>
+          <th>No. Incidentes y/o accidentes<br>vehiculares con desvío</th>
+          <th>Resultado</th>
+          <th>Puntaje<br>Máx</th>
+          <th>Puntaje<br>asignado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-label">Incidentes y/o accidentes vehiculares con desvío presupuestal</td>
+          <td class="td-formula">
+            <textarea id="formula" oninput="onFormula()" placeholder="Descripción de la fórmula..."></textarea>
+          </td>
+          <td class="td-meta-edit">
+            <input class="inp-meta" type="number" id="meta"
+              oninput="onMeta()" placeholder="0" min="0" step="1">
+          </td>
+          <td class="td-soporte">
+            <textarea id="soporte" oninput="onSoporte()" placeholder="Soporte requerido..."></textarea>
+          </td>
+          <td class="td-num">
+            <input class="inp-num" type="number" id="numero"
+              oninput="onChange()" placeholder="0" min="0" step="1">
+            <div style="font-size:10px;color:#6b7e96;margin-top:3px">incidentes</div>
+          </td>
+          <td class="td-resultado vacio" id="tdResultado">
+            <div class="res-icon">—</div>
+            <div class="res-text"></div>
+            <div class="res-sub"></div>
+          </td>
+          <td class="td-peso-max">5</td>
+          <td class="td-puntaje vacio" id="tdPuntaje">
+            <div class="punt-val" id="puntVal">—</div>
+            <div class="punt-label">de 5</div>
+            <div class="punt-adj">
+              <span class="adj-lbl">Ajuste:</span>
+              <input type="number" id="puntOverride" class="inp-adj"
+                placeholder="auto" step="0.01" min="0" max="5" onchange="onOverride()">
+              <button class="btn-adj-reset" id="btnReset"
+                onclick="resetOverride()" style="display:none">↺ auto</button>
+            </div>
+            <div class="override-badge" id="overrideBadge" style="display:none">✎ Ajustado</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const params  = new URLSearchParams(location.search);
+    const ANIO    = parseInt(params.get('anio')) || new Date().getFullYear();
+    const MES     = parseInt(params.get('mes'))  || (new Date().getMonth() + 1);
+    const MES_PAD = String(MES).padStart(2, '0');
+    const PESO    = 5;
+
+    const MESES_NOM = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                       'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    document.getElementById('periodoTag').textContent = `${MESES_NOM[MES - 1]} ${ANIO}`;
+
+    const CFG_KEY = `ind6_config_${ANIO}`;
+    const DAT_KEY = `ind6_data_${ANIO}_${MES_PAD}`;
+    const OVR_KEY = `ind6_override_${ANIO}_${MES_PAD}`;
+    let puntajeOverride = null;
+
+    function saveOverride() {
+      if (puntajeOverride !== null) localStorage.setItem(OVR_KEY, puntajeOverride);
+      else localStorage.removeItem(OVR_KEY);
+    }
+    function onOverride() {
+      const el = document.getElementById('puntOverride');
+      let v = el.value !== '' ? parseFloat(el.value) : null;
+      if (v !== null) { if (v < 0) v = 0; if (v > PESO) { v = PESO; el.value = PESO; } }
+      puntajeOverride = v;
+      saveOverride(); updateOverrideUI(); calcYRender();
+    }
+    function resetOverride() {
+      puntajeOverride = null;
+      document.getElementById('puntOverride').value = '';
+      saveOverride(); updateOverrideUI(); calcYRender();
+    }
+    function updateOverrideUI() {
+      const active = puntajeOverride !== null;
+      document.getElementById('puntOverride').classList.toggle('active', active);
+      document.getElementById('btnReset').style.display      = active ? 'inline' : 'none';
+      document.getElementById('overrideBadge').style.display = active ? 'block'  : 'none';
+    }
+
+    let cfg, dat;
+
+    function loadAll() {
+      const sc = localStorage.getItem(CFG_KEY);
+      cfg = sc ? JSON.parse(sc) : {
+        formula: 'No. de incidentes y/o accidentes vehiculares con desvío presupuestal en el periodo',
+        soporte: '',
+        meta: 0
+      };
+
+      const sd = localStorage.getItem(DAT_KEY);
+      dat = sd ? JSON.parse(sd) : { numero: '' };
+
+      document.getElementById('formula').value = cfg.formula ?? '';
+      document.getElementById('soporte').value = cfg.soporte ?? '';
+      document.getElementById('meta').value    = cfg.meta ?? 0;
+      document.getElementById('numero').value  = dat.numero !== '' ? dat.numero : '';
+
+      const ov = localStorage.getItem(OVR_KEY);
+      puntajeOverride = ov !== null ? parseFloat(ov) : null;
+      if (puntajeOverride !== null) document.getElementById('puntOverride').value = puntajeOverride;
+      updateOverrideUI();
+    }
+
+    function saveCfg() { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
+    function saveDat() { localStorage.setItem(DAT_KEY, JSON.stringify(dat)); }
+
+    // ── Cálculo y render ──────────────────────────────────────────────────────
+    function calcYRender() {
+      const numStr = document.getElementById('numero').value;
+      const meta   = parseInt(document.getElementById('meta').value) ?? 0;
+
+      if (numStr === '' || numStr === null) {
+        setResultado('vacio', '—', '', '');
+        setPuntaje('vacio', null);
+        postReal(0);
+        return;
+      }
+
+      const num    = parseInt(numStr) || 0;
+      const cumple = num === meta;
+
+      if (cumple) {
+        setResultado('cumple', '✓', 'Cumple', `${num} incidente(s) — igual a meta (${meta})`);
+        setPuntaje('cumple', PESO);
+        postReal(100);
+      } else {
+        setResultado('no-cumple', '✗', 'No cumple', `${num} incidente(s) — meta: ${meta}`);
+        setPuntaje('no-cumple', 0);
+        postReal(0);
+      }
+    }
+
+    function setResultado(cls, icon, text, sub) {
+      const el = document.getElementById('tdResultado');
+      el.className = `td-resultado ${cls}`;
+      el.innerHTML = `<div class="res-icon">${icon}</div>
+        <div class="res-text">${text}</div>
+        <div class="res-sub">${sub}</div>`;
+    }
+
+    function setPuntaje(cls, pts) {
+      const effPts = puntajeOverride !== null ? puntajeOverride : pts;
+      const el = document.getElementById('tdPuntaje');
+      el.className = `td-puntaje ${puntajeOverride !== null ? 'cumple' : cls}`;
+      document.getElementById('puntVal').textContent = effPts !== null ? effPts.toFixed(2) : '—';
+    }
+
+    function postReal(autoReal) {
+      const effPts = puntajeOverride !== null ? puntajeOverride : null;
+      const real   = effPts !== null ? Math.round((effPts / PESO) * 1000) / 10 : autoReal;
+      parent.postMessage({ type: 'setReal', id: '6', real, anio: ANIO, mes: MES }, '*');
+    }
+
+    // ── Handlers ─────────────────────────────────────────────────────────────
+    let saveTimer;
+    function schedSave() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => { saveCfg(); saveDat(); }, 600);
+    }
+
+    function onChange() {
+      const v = document.getElementById('numero').value;
+      dat.numero = v !== '' ? (parseInt(v) ?? '') : '';
+      schedSave(); calcYRender();
+    }
+    function onMeta() {
+      cfg.meta = parseInt(document.getElementById('meta').value) ?? 0;
+      schedSave(); calcYRender();
+    }
+    function onFormula() {
+      cfg.formula = document.getElementById('formula').value;
+      schedSave();
+    }
+    function onSoporte() {
+      cfg.soporte = document.getElementById('soporte').value;
+      schedSave();
+    }
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    loadAll();
+    calcYRender();
+  </script>
+<script src="../../notas.js"></script></body>
+</html>

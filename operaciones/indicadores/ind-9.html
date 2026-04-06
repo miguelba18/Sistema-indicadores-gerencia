@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Indicador 9 – Flujo de caja</title>
+  <link rel="stylesheet" href="../../area-base.css">
+  <style>
+    :root { --area-color: #1565c0; --area-color-rgb: 21, 101, 192; }
+    body { background: #f0f5ff; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 12.5px; color: #222; margin: 0; }
+
+    .ind-header {
+      background: var(--area-color); color: #fff;
+      padding: 10px 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .ind-num   { background: rgba(255,255,255,.2); font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 10px; flex-shrink: 0; }
+    .ind-title { font-size: 13px; font-weight: 600; flex: 1; }
+    .ind-peso  { font-size: 12px; color: rgba(255,255,255,.75); flex-shrink: 0; }
+
+    .periodo-bar {
+      background: #dce8f5; padding: 5px 18px; font-size: 11.5px; color: #1a3a5c;
+      border-bottom: 1px solid #b8cfe8; display: flex; align-items: center; gap: 8px;
+    }
+    .periodo-tag {
+      background: var(--area-color); color: #fff; font-size: 10.5px; font-weight: 700;
+      padding: 1px 9px; border-radius: 10px;
+    }
+    .nota-anual { font-size: 10.5px; color: #6b7e96; font-style: italic; padding: 6px 18px 2px; }
+
+    .tbl-wrap { padding: 10px 18px 14px; overflow-x: auto; }
+    table.ind-tabla { width: 100%; border-collapse: collapse; min-width: 980px; font-size: 12px; }
+    .ind-tabla th {
+      background: var(--area-color); color: #fff; padding: 7px 8px; text-align: center;
+      border: 1px solid rgba(255,255,255,.25); font-weight: 600; font-size: 11px; line-height: 1.35;
+    }
+    .ind-tabla td { border: 1px solid #c5d5e8; padding: 6px 8px; vertical-align: middle; background: #fff; }
+
+    /* Columna fórmula */
+    .td-formula { background: #e8edf5 !important; font-size: 10.5px; font-style: italic; color: #374151; width: 155px; line-height: 1.45; text-align: center; }
+    .td-formula textarea { width: 100%; min-height: 60px; resize: vertical; border: 1px solid #c5d5e8; border-radius: 4px; padding: 4px 6px; font-size: 11px; font-family: inherit; font-style: italic; background: #f8fafc; color: #222; box-sizing: border-box; }
+
+    /* Meta */
+    .td-meta { text-align: center; min-width: 80px; }
+    .inp-meta { width: 56px; text-align: center; border: 1px solid #c5d5e8; border-radius: 4px; padding: 4px 5px; font-size: 12px; background: #fff; -moz-appearance: textfield; appearance: textfield; }
+    .inp-meta::-webkit-inner-spin-button { display: none; }
+
+    /* Soporte */
+    .td-soporte { background: #eef4fc !important; font-size: 11px; color: #374151; text-align: center; min-width: 140px; }
+    .td-soporte textarea { width: 100%; min-height: 60px; resize: vertical; border: 1px solid #c5d5e8; border-radius: 4px; padding: 4px 6px; font-size: 11px; font-family: inherit; background: #fff; color: #222; box-sizing: border-box; }
+
+    /* Fecha */
+    .td-fecha { text-align: center; min-width: 120px; }
+    .inp-fecha { border: 1px solid #c5d5e8; border-radius: 4px; padding: 4px 6px; font-size: 12px; background: #fff; color: #222; font-family: inherit; }
+
+    /* Moneda */
+    .td-money { min-width: 150px; }
+    .inp-money { width: 100%; box-sizing: border-box; text-align: right; border: 1px solid #c5d5e8; border-radius: 4px; padding: 4px 6px; font-size: 12px; background: #fff; }
+
+    /* Resultado */
+    .td-resultado { text-align: center; min-width: 90px; }
+    .td-resultado.cumple    { background: #d4edda !important; color: #155724; }
+    .td-resultado.no-cumple { background: #f8d7da !important; color: #721c24; }
+    .td-resultado.vacio     { background: #f0f5ff !important; color: #94a3b8; }
+    .res-pct   { font-size: 16px; font-weight: 800; line-height: 1; }
+    .res-label { font-size: 9.5px; font-weight: 400; opacity: .8; margin-top: 3px; }
+
+    /* Puntaje máx */
+    .td-peso-max { text-align: center; font-weight: 800; font-size: 18px; color: var(--area-color); background: #eef4fc !important; width: 68px; }
+
+    /* Puntaje total */
+    .td-total { text-align: center; min-width: 90px; }
+    .td-total.bueno { background: #d4edda !important; }
+    .td-total.medio { background: #fff3cd !important; }
+    .td-total.malo  { background: #f8d7da !important; }
+    .td-total.vacio { background: #f0f5ff !important; }
+    .tot-val   { font-size: 18px; font-weight: 800; }
+    .tot-label { font-size: 10px; opacity: .75; margin-top: 2px; }
+    .td-total.bueno .tot-val { color: #155724; }
+    .td-total.medio .tot-val { color: #856404; }
+    .td-total.malo  .tot-val { color: #721c24; }
+    .td-total.vacio .tot-val { color: #94a3b8; }
+
+    /* Override */
+    .punt-adj { display: flex; align-items: center; gap: 3px; justify-content: center; margin-top: 6px; flex-wrap: wrap; }
+    .adj-lbl  { font-size: 9px; color: #94a3b8; }
+    .inp-adj  { width: 52px; text-align: center; font-size: 11px; border: 1px solid #c5d5e8; border-radius: 3px; padding: 2px 4px; background: rgba(255,255,255,.85); -moz-appearance: textfield; appearance: textfield; }
+    .inp-adj::-webkit-inner-spin-button { display: none; }
+    .inp-adj.active { border-color: #f59e0b; background: #fffbeb; }
+    .btn-adj-reset { background: none; border: none; font-size: 10px; color: #f59e0b; cursor: pointer; padding: 0; }
+    .btn-adj-reset:hover { color: #d97706; text-decoration: underline; }
+    .override-badge { font-size: 9px; color: #92400e; background: #fef3c7; padding: 1px 5px; border-radius: 3px; margin-top: 3px; }
+  </style>
+</head>
+<body>
+
+  <div class="ind-header">
+    <span class="ind-num">Ítem 9</span>
+    <span class="ind-title">Flujo de caja</span>
+    <span class="ind-peso">Peso: 5</span>
+  </div>
+
+  <div class="periodo-bar">
+    Período: <span class="periodo-tag" id="periodoTag">—</span>
+  </div>
+  <div class="nota-anual">ℹ️ Fórmula, meta y soporte son anuales. Fecha, ejecutado y proyectado se registran por mes.</div>
+
+  <div class="tbl-wrap">
+    <table class="ind-tabla">
+      <thead>
+        <tr>
+          <th>Fórmula</th>
+          <th>Meta<br>2026&nbsp;(%)</th>
+          <th>Soporte a anexar</th>
+          <th>Fecha entrega<br>información</th>
+          <th>Flujo de caja<br>ejecutado</th>
+          <th>Flujo de caja<br>proyectado</th>
+          <th>Resultado</th>
+          <th>Puntaje<br>Máx</th>
+          <th>Puntaje<br>obtenido</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-formula">
+            <textarea id="formula" oninput="onCfg()" placeholder="Fórmula..."></textarea>
+          </td>
+          <td class="td-meta">
+            <input class="inp-meta" type="number" id="meta" min="0" max="200" step="1"
+              oninput="onCfg(); calcYRender()">
+            &nbsp;%
+          </td>
+          <td class="td-soporte">
+            <textarea id="soporte" oninput="onCfg()" placeholder="Soporte..."></textarea>
+          </td>
+          <td class="td-fecha">
+            <input class="inp-fecha" type="date" id="fecha" onchange="onDat()">
+          </td>
+          <td class="td-money">
+            <input class="inp-money" type="text" id="ejecutado"
+              placeholder="$ 0" onfocus="focusMoney(this)"
+              onblur="blurMoney(this,'ejecutado')"
+              oninput="inputMoney(this,'ejecutado')">
+          </td>
+          <td class="td-money">
+            <input class="inp-money" type="text" id="proyectado"
+              placeholder="$ 0" onfocus="focusMoney(this)"
+              onblur="blurMoney(this,'proyectado')"
+              oninput="inputMoney(this,'proyectado')">
+          </td>
+          <td class="td-resultado vacio" id="tdResultado">
+            <div class="res-pct" id="resPct">—</div>
+            <div class="res-label" id="resLabel"></div>
+          </td>
+          <td class="td-peso-max">5</td>
+          <td class="td-total vacio" id="tdTotal">
+            <div class="tot-val" id="totVal">—</div>
+            <div class="tot-label">de 5</div>
+            <div class="punt-adj">
+              <span class="adj-lbl">Ajuste:</span>
+              <input type="number" id="puntOverride" class="inp-adj"
+                placeholder="auto" step="0.01" min="0" max="5" onchange="onOverride()">
+              <button class="btn-adj-reset" id="btnReset"
+                onclick="resetOverride()" style="display:none">↺ auto</button>
+            </div>
+            <div class="override-badge" id="overrideBadge" style="display:none">✎ Ajustado</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    const params  = new URLSearchParams(location.search);
+    const ANIO    = parseInt(params.get('anio')) || new Date().getFullYear();
+    const MES     = parseInt(params.get('mes'))  || (new Date().getMonth() + 1);
+    const MES_PAD = String(MES).padStart(2, '0');
+    const PESO    = 5;
+
+    const MESES_NOM = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                       'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    document.getElementById('periodoTag').textContent = `${MESES_NOM[MES - 1]} ${ANIO}`;
+
+    const CFG_KEY = `ind9_config_${ANIO}`;
+    const DAT_KEY = `ind9_data_${ANIO}_${MES_PAD}`;
+    const OVR_KEY = `ind9_override_${ANIO}_${MES_PAD}`;
+    let puntajeOverride = null;
+
+    // ── Config & data ─────────────────────────────────────────────────────────
+    let cfg, dat;
+
+    function loadAll() {
+      const sc = localStorage.getItem(CFG_KEY);
+      cfg = sc ? JSON.parse(sc) : {
+        formula:  'Flujo de caja ejecutado / Flujo de caja proyectado',
+        meta:     100,
+        soporte:  'Informe de flujo de caja'
+      };
+      const sd = localStorage.getItem(DAT_KEY);
+      dat = sd ? JSON.parse(sd) : { fecha: '', ejecutado: '', proyectado: '' };
+
+      document.getElementById('formula').value   = cfg.formula  || '';
+      document.getElementById('meta').value      = cfg.meta     ?? 100;
+      document.getElementById('soporte').value   = cfg.soporte  || '';
+      document.getElementById('fecha').value     = dat.fecha    || '';
+      document.getElementById('ejecutado').value = dat.ejecutado ? fmtMoney(dat.ejecutado) : '';
+      document.getElementById('proyectado').value= dat.proyectado ? fmtMoney(dat.proyectado) : '';
+
+      const _ov = localStorage.getItem(OVR_KEY);
+      puntajeOverride = _ov !== null ? parseFloat(_ov) : null;
+      if (puntajeOverride !== null) {
+        document.getElementById('puntOverride').value = puntajeOverride;
+        document.getElementById('puntOverride').classList.add('active');
+        document.getElementById('btnReset').style.display = 'inline';
+        document.getElementById('overrideBadge').style.display = 'block';
+      }
+
+      calcYRender();
+    }
+
+    function saveCfg() { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
+    function saveDat() { localStorage.setItem(DAT_KEY, JSON.stringify(dat)); }
+
+    // ── Moneda ────────────────────────────────────────────────────────────────
+    function parseMoney(s) {
+      return parseFloat(
+        String(s || '').replace(/\$\s*/g,'').replace(/\./g,'').replace(',','.').replace(/[^\d.-]/g,'')
+      ) || 0;
+    }
+    function fmtMoney(n) {
+      const num = Math.round(parseFloat(n) || 0);
+      return num ? '$ ' + num.toLocaleString('es-CO') : '';
+    }
+    function focusMoney(el) { const r = parseMoney(el.value); el.value = r || ''; }
+    function blurMoney(el, field) {
+      const r = parseMoney(el.value);
+      dat[field] = r || '';
+      el.value = r ? fmtMoney(r) : '';
+      schedSave(); calcYRender();
+    }
+    function inputMoney(el, field) {
+      dat[field] = parseMoney(el.value) || '';
+      schedSave(); calcYRender();
+    }
+
+    // ── Cálculo ───────────────────────────────────────────────────────────────
+    function calcYRender() {
+      const ej   = parseFloat(dat.ejecutado)  || 0;
+      const proy = parseFloat(dat.proyectado) || 0;
+      const meta = parseFloat(cfg.meta)       || 100;
+
+      const tdRes = document.getElementById('tdResultado');
+      const elPct = document.getElementById('resPct');
+      const elLbl = document.getElementById('resLabel');
+
+      let autoPuntaje = null;
+      let resultado   = null;
+      let cumple      = false;
+
+      if (ej > 0 && proy > 0) {
+        resultado = (ej / proy) * 100;
+        cumple    = resultado >= meta;
+        // Puntaje proporcional: (resultado / meta) * PESO, máx PESO
+        autoPuntaje = Math.min((resultado / meta) * PESO, PESO);
+
+        const cls = cumple ? 'cumple' : 'no-cumple';
+        tdRes.className = `td-resultado ${cls}`;
+        elPct.textContent = resultado.toFixed(1) + '%';
+        elLbl.textContent = cumple ? '✓ Cumple' : '✗ No cumple';
+      } else {
+        tdRes.className = 'td-resultado vacio';
+        elPct.textContent = '—';
+        elLbl.textContent = '';
+      }
+
+      const eff = puntajeOverride !== null ? puntajeOverride : autoPuntaje;
+      const tdTot = document.getElementById('tdTotal');
+      if (eff !== null) {
+        const effPct = (eff / PESO) * 100;
+        const cls = effPct >= 80 ? 'bueno' : effPct >= 60 ? 'medio' : 'malo';
+        tdTot.className = `td-total ${cls}`;
+        document.getElementById('totVal').textContent = eff.toFixed(2);
+      } else {
+        tdTot.className = 'td-total vacio';
+        document.getElementById('totVal').textContent = '—';
+      }
+
+      postReal(eff);
+    }
+
+    // ── postMessage ───────────────────────────────────────────────────────────
+    let postTimer;
+    function postReal(eff) {
+      clearTimeout(postTimer);
+      postTimer = setTimeout(() => {
+        const real = eff !== null ? Math.round((eff / PESO) * 1000) / 10 : 0;
+        parent.postMessage({ type: 'setReal', id: '9', real, anio: ANIO, mes: MES }, '*');
+      }, 350);
+    }
+
+    // ── Override ──────────────────────────────────────────────────────────────
+    function saveOverride() {
+      if (puntajeOverride !== null) localStorage.setItem(OVR_KEY, puntajeOverride);
+      else localStorage.removeItem(OVR_KEY);
+    }
+    function onOverride() {
+      const el = document.getElementById('puntOverride');
+      let v = el.value !== '' ? parseFloat(el.value) : null;
+      if (v !== null) { if (v < 0) v = 0; if (v > PESO) { v = PESO; el.value = PESO; } }
+      puntajeOverride = v;
+      saveOverride(); updateOverrideUI(); calcYRender();
+    }
+    function resetOverride() {
+      puntajeOverride = null;
+      document.getElementById('puntOverride').value = '';
+      saveOverride(); updateOverrideUI(); calcYRender();
+    }
+    function updateOverrideUI() {
+      const el    = document.getElementById('puntOverride');
+      const btn   = document.getElementById('btnReset');
+      const badge = document.getElementById('overrideBadge');
+      const active = puntajeOverride !== null;
+      el.classList.toggle('active', active);
+      btn.style.display   = active ? 'inline' : 'none';
+      badge.style.display = active ? 'block'  : 'none';
+    }
+
+    // ── Handlers ──────────────────────────────────────────────────────────────
+    let saveTimer;
+    function schedSave() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => { saveCfg(); saveDat(); }, 600);
+    }
+    function onCfg() {
+      cfg.formula = document.getElementById('formula').value;
+      cfg.meta    = parseFloat(document.getElementById('meta').value) || 100;
+      cfg.soporte = document.getElementById('soporte').value;
+      schedSave();
+    }
+    function onDat() {
+      dat.fecha = document.getElementById('fecha').value;
+      schedSave();
+    }
+
+    loadAll();
+  </script>
+<script src="../../notas.js"></script></body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Indicador 1 – Incremento de la participación en el mercado nacional</title>
+  <link rel="stylesheet" href="../../area-base.css">
+  <style>
+    :root { --area-color: #b71c1c; --area-color-rgb: 183, 28, 28; }
+    body { background: #ffebee; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 12.5px; color: #222; margin: 0; }
+    .ind-header { background: var(--area-color); color: #fff; padding: 10px 18px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .ind-num   { background: rgba(255,255,255,.2); font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 10px; flex-shrink: 0; }
+    .ind-title { font-size: 13px; font-weight: 600; flex: 1; }
+    .ind-peso  { font-size: 12px; color: rgba(255,255,255,.75); flex-shrink: 0; }
+    .grupo-bar { background: #ffcdd2; padding: 5px 18px; font-size: 11px; color: #374151; border-bottom: 1px solid #ef9a9a; display: flex; align-items: center; gap: 6px; }
+    .periodo-tag { background: var(--area-color); color: #fff; font-size: 10.5px; font-weight: 700; padding: 1px 9px; border-radius: 10px; }
+    .nota-anual { font-size: 10.5px; color: #6b7e96; font-style: italic; padding: 6px 18px 2px; }
+    .tbl-wrap { padding: 10px 18px 14px; overflow-x: auto; }
+    table.ind-tabla { width: 100%; border-collapse: collapse; min-width: 700px; font-size: 12px; }
+    .ind-tabla th { background: var(--area-color); color: #fff; padding: 7px 8px; text-align: center; border: 1px solid rgba(255,255,255,.25); font-weight: 600; font-size: 11px; line-height: 1.35; }
+    .ind-tabla td { border: 1px solid #ef9a9a; padding: 7px 9px; vertical-align: middle; }
+    .td-formula { background: #ffcdd2 !important; min-width: 180px; }
+    .td-formula textarea { width: 100%; resize: vertical; border: 1px solid #ef9a9a; border-radius: 4px; padding: 4px 6px; font-size: 11px; font-family: inherit; background: #fff8f8; color: #222; box-sizing: border-box; font-style: italic; min-height: 50px; }
+    .td-meta { min-width: 130px; }
+    .inp-meta { width: 100%; box-sizing: border-box; border: 1px solid #ef9a9a; border-radius: 4px; padding: 5px 7px; font-size: 11px; background: #fff; }
+    .td-soporte { background: #fff8f8 !important; text-align: center; min-width: 130px; }
+    .td-soporte textarea { width: 100%; resize: vertical; border: 1px solid #ef9a9a; border-radius: 4px; padding: 4px 6px; font-size: 11px; font-family: inherit; background: #fff; color: #222; box-sizing: border-box; min-height: 76px; }
+    .td-resultado { text-align: center; min-width: 110px; }
+    .inp-resultado { width: 100%; box-sizing: border-box; border: 1px solid #ef9a9a; border-radius: 4px; padding: 5px 7px; font-size: 12px; background: #fff; text-align: center; }
+    .inp-resultado:focus { border-color: var(--area-color); outline: none; }
+    .td-peso-max { text-align: center; font-weight: 800; font-size: 16px; color: var(--area-color); background: #ffcdd2 !important; width: 70px; }
+    .td-puntaje { text-align: center; min-width: 100px; }
+    .inp-punt { width: 78px; text-align: center; font-size: 18px; font-weight: 800; border: 2px solid #ef9a9a; border-radius: 6px; padding: 5px 6px; background: #ffcdd2; color: var(--area-color); -moz-appearance: textfield; appearance: textfield; font-family: inherit; }
+    .inp-punt::-webkit-inner-spin-button { display: none; }
+    .inp-punt:focus { border-color: var(--area-color); outline: none; background: #fff; }
+    .punt-bar { height: 5px; border-radius: 3px; background: #e2e8f0; margin-top: 4px; width: 78px; overflow: hidden; display: block; }
+    .punt-bar-fill { height: 100%; background: var(--area-color); transition: width .3s; }
+    .tr-total td { background: #ffcdd2 !important; border-top: 2px solid var(--area-color); font-weight: 700; }
+    .total-lbl { text-align: right; color: #374151; padding-right: 12px !important; }
+    .td-total-punt { text-align: center; font-size: 18px; font-weight: 800; color: var(--area-color); }
+    .badge-criterio { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 10.5px; font-weight: 700; background: #fff3e0; color: #e65100; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="ind-header">
+    <span class="ind-num">Ítem 1</span>
+    <span class="ind-title">Incremento de la participación en el mercado nacional</span>
+    <span class="ind-peso">Peso: 15</span>
+  </div>
+  <div class="grupo-bar">Período: <span class="periodo-tag" id="periodoTag">—</span></div>
+  <div class="nota-anual">ℹ️ Puntaje asignado a criterio (máx 7.5 por subcritero). Soporte es anual. Datos se registran por mes.</div>
+  <div class="tbl-wrap">
+    <table class="ind-tabla">
+      <thead>
+        <tr>
+          <th>Fórmula / Descripción</th>
+          <th>Meta 2026</th>
+          <th>Soporte a anexar</th>
+          <th>Resultado</th>
+          <th>Puntaje<br>Máx</th>
+          <th>Puntaje<br>asignado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-formula">
+            <textarea id="formulaA" oninput="onCfg()"></textarea>
+          </td>
+          <td class="td-meta">
+            <input class="inp-meta" type="text" id="metaA" oninput="onCfg()">
+          </td>
+          <td class="td-soporte" rowspan="2">
+            <textarea id="soporte" oninput="onCfg()"></textarea>
+          </td>
+          <td class="td-resultado">
+            <input class="inp-resultado" type="text" id="resultadoA" placeholder="Ej: 2 clientes" oninput="onDat()">
+            <div class="badge-criterio">A criterio</div>
+          </td>
+          <td class="td-peso-max">7.5</td>
+          <td class="td-puntaje">
+            <input class="inp-punt" type="number" id="puntajeA" min="0" max="7.5" step="0.01" placeholder="0" oninput="onDat()">
+            <div class="punt-bar"><div class="punt-bar-fill" id="barA" style="width:0%"></div></div>
+          </td>
+        </tr>
+        <tr>
+          <td class="td-formula">
+            <textarea id="formulaB" oninput="onCfg()"></textarea>
+          </td>
+          <td class="td-meta">
+            <input class="inp-meta" type="text" id="metaB" oninput="onCfg()">
+          </td>
+          <td class="td-resultado">
+            <input class="inp-resultado" type="text" id="resultadoB" placeholder="Ej: 2 contratos" oninput="onDat()">
+            <div class="badge-criterio">A criterio</div>
+          </td>
+          <td class="td-peso-max">7.5</td>
+          <td class="td-puntaje">
+            <input class="inp-punt" type="number" id="puntajeB" min="0" max="7.5" step="0.01" placeholder="0" oninput="onDat()">
+            <div class="punt-bar"><div class="punt-bar-fill" id="barB" style="width:0%"></div></div>
+          </td>
+        </tr>
+        <tr class="tr-total">
+          <td colspan="3" class="total-lbl">TOTAL</td>
+          <td></td>
+          <td class="td-peso-max">15</td>
+          <td class="td-total-punt" id="totalPunt">—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <script>
+    const params  = new URLSearchParams(location.search);
+    const ANIO    = parseInt(params.get('anio')) || new Date().getFullYear();
+    const MES     = parseInt(params.get('mes'))  || (new Date().getMonth() + 1);
+    const MES_PAD = String(MES).padStart(2, '0');
+    const PESO    = 15;
+    const MESES_NOM = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    document.getElementById('periodoTag').textContent = `${MESES_NOM[MES - 1]} ${ANIO}`;
+
+    const CFG_KEY = `indger1_config_${ANIO}`;
+    const DAT_KEY = `indger1_data_${ANIO}_${MES_PAD}`;
+    let cfg, dat;
+    const el = id => document.getElementById(id);
+
+    function loadAll() {
+      const sc = localStorage.getItem(CFG_KEY);
+      cfg = sc ? JSON.parse(sc) : {
+        formulaA: 'No. de Nuevos clientes',
+        metaA:    '2 nuevos clientes en el año',
+        formulaB: 'No. de contratos nuevos en otros sectores industriales',
+        metaB:    '2 en el año',
+        soporte:  'Carta de adjudicación'
+      };
+      const sd = localStorage.getItem(DAT_KEY);
+      dat = sd ? JSON.parse(sd) : { resultadoA: '', puntajeA: '', resultadoB: '', puntajeB: '' };
+
+      el('formulaA').value  = cfg.formulaA  || '';
+      el('metaA').value     = cfg.metaA     || '';
+      el('formulaB').value  = cfg.formulaB  || '';
+      el('metaB').value     = cfg.metaB     || '';
+      el('soporte').value   = cfg.soporte   || '';
+      el('resultadoA').value = dat.resultadoA || '';
+      el('puntajeA').value   = dat.puntajeA  || '';
+      el('resultadoB').value = dat.resultadoB || '';
+      el('puntajeB').value   = dat.puntajeB  || '';
+
+      calcYRender();
+    }
+
+    function calcYRender() {
+      const pA = Math.min(Math.max(parseFloat(el('puntajeA').value) || 0, 0), 7.5);
+      const pB = Math.min(Math.max(parseFloat(el('puntajeB').value) || 0, 0), 7.5);
+      const total = pA + pB;
+      el('totalPunt').textContent = total.toFixed(2);
+      el('barA').style.width = (pA / 7.5 * 100) + '%';
+      el('barB').style.width = (pB / 7.5 * 100) + '%';
+      postReal(total);
+    }
+
+    function postReal(p) {
+      parent.postMessage({ type: 'setReal', id: '1', real: Math.round((p / PESO) * 1000) / 10, anio: ANIO, mes: MES }, '*');
+    }
+
+    function saveCfg() { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
+    function saveDat() { localStorage.setItem(DAT_KEY, JSON.stringify(dat)); }
+
+    let cfgT, datT;
+    function onCfg() {
+      cfg.formulaA = el('formulaA').value; cfg.metaA = el('metaA').value;
+      cfg.formulaB = el('formulaB').value; cfg.metaB = el('metaB').value;
+      cfg.soporte  = el('soporte').value;
+      clearTimeout(cfgT); cfgT = setTimeout(saveCfg, 600);
+    }
+    function onDat() {
+      dat.resultadoA = el('resultadoA').value; dat.puntajeA = el('puntajeA').value;
+      dat.resultadoB = el('resultadoB').value; dat.puntajeB = el('puntajeB').value;
+      clearTimeout(datT); datT = setTimeout(saveDat, 600);
+      calcYRender();
+    }
+
+    loadAll();
+  </script>
+<script src="../../notas.js"></script></body>
+</html>

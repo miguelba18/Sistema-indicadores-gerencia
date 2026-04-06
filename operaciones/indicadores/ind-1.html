@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Indicador 1 – Rentabilidad de contratos</title>
+  <link rel="stylesheet" href="../../area-base.css">
+  <style>
+    :root { --area-color: #1565c0; --area-color-rgb: 21, 101, 192; }
+    body { background: #f0f5ff; font-family: 'Segoe UI', Tahoma, sans-serif; font-size: 12.5px; color: #222; margin: 0; }
+
+    .ind-header {
+      background: var(--area-color); color: #fff;
+      padding: 10px 18px;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .ind-num   { background: rgba(255,255,255,.2); font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 10px; flex-shrink: 0; }
+    .ind-title { font-size: 13px; font-weight: 600; flex: 1; }
+    .ind-peso  { font-size: 12px; color: rgba(255,255,255,.75); flex-shrink: 0; }
+
+    .periodo-bar {
+      background: #dce8f5; padding: 5px 18px;
+      font-size: 11.5px; color: #1a3a5c;
+      border-bottom: 1px solid #b8cfe8;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .periodo-tag {
+      background: var(--area-color); color: #fff;
+      font-size: 10.5px; font-weight: 700;
+      padding: 1px 9px; border-radius: 10px;
+    }
+
+    .nota-anual {
+      font-size: 10.5px; color: #6b7e96; font-style: italic;
+      padding: 6px 18px 2px;
+    }
+
+    .tbl-wrap { padding: 10px 18px 4px; overflow-x: auto; }
+
+    table.ind-tabla {
+      width: 100%; border-collapse: collapse;
+      min-width: 960px; font-size: 12px;
+    }
+
+    .ind-tabla th {
+      background: var(--area-color); color: #fff;
+      padding: 7px 8px; text-align: center;
+      border: 1px solid rgba(255,255,255,.25);
+      font-weight: 600; font-size: 11px; line-height: 1.35;
+    }
+
+    .ind-tabla td {
+      border: 1px solid #c5d5e8;
+      padding: 5px 7px;
+      vertical-align: middle;
+    }
+
+    tr.row-even td { background: #fff; }
+    tr.row-odd  td { background: #f5f8ff; }
+
+    .td-formula {
+      background: #e8edf5 !important;
+      font-size: 11px; font-style: italic;
+      color: #374151; text-align: center;
+      width: 145px; line-height: 1.45;
+    }
+    .td-soporte {
+      background: #eef4fc !important;
+      font-size: 11px; color: #374151; text-align: center;
+      min-width: 150px;
+    }
+    .td-soporte textarea {
+      width: 100%; min-height: 70px; resize: vertical;
+      border: 1px solid #c5d5e8; border-radius: 4px;
+      padding: 4px 6px; font-size: 11px; font-family: inherit;
+      background: #fff; color: #222; box-sizing: border-box;
+    }
+
+    /* Inputs anuales */
+    .inp-meta {
+      width: 52px; text-align: center;
+      border: 1px solid #c5d5e8; border-radius: 4px;
+      padding: 4px 5px; font-size: 12px; background: #fff;
+      -moz-appearance: textfield; appearance: textfield;
+    }
+    .inp-meta::-webkit-inner-spin-button { display: none; }
+
+    .inp-desc {
+      width: 100%; min-width: 80px; box-sizing: border-box;
+      border: 1px solid #c5d5e8; border-radius: 4px;
+      padding: 4px 6px; font-size: 12px; background: #fff;
+    }
+    .td-desc { min-width: 100px; }
+
+    /* Inputs monetarios */
+    .inp-money {
+      width: 100%; box-sizing: border-box; text-align: right;
+      border: 1px solid #c5d5e8; border-radius: 4px;
+      padding: 4px 6px; font-size: 12px; background: #fff;
+    }
+    .td-money { min-width: 135px; }
+
+    /* Input rentabilidad */
+    .inp-rent {
+      width: 52px; text-align: right;
+      border: 1px solid #c5d5e8; border-radius: 4px;
+      padding: 4px 5px; font-size: 12px; background: #fff;
+      -moz-appearance: textfield; appearance: textfield;
+    }
+    .inp-rent::-webkit-inner-spin-button { display: none; }
+    .td-rent { text-align: center; white-space: nowrap; min-width: 80px; }
+
+    /* Celdas calculadas */
+    .td-resultado { text-align: center; min-width: 115px; }
+    .td-resultado.cumple    { background: #d4edda !important; color: #155724; }
+    .td-resultado.no-cumple { background: #f8d7da !important; color: #721c24; }
+    .res-diff  { font-size: 12.5px; font-weight: 700; }
+    .res-label { font-size: 10px; opacity: .8; margin-top: 1px; }
+
+    .td-pts { text-align: center; font-weight: 700; font-size: 12.5px; min-width: 58px; }
+    .td-pts.cumple    { color: #155724; }
+    .td-pts.no-cumple { color: #b0122a; }
+
+    .td-peso-max {
+      text-align: center; font-weight: 800; font-size: 18px;
+      color: var(--area-color); background: #eef4fc !important;
+      min-width: 68px;
+    }
+
+    .td-total { text-align: center; min-width: 82px; }
+    .td-total.bueno { background: #d4edda !important; }
+    .td-total.medio { background: #fff3cd !important; }
+    .td-total.malo  { background: #f8d7da !important; }
+    .tot-val   { font-size: 18px; font-weight: 800; }
+    .tot-label { font-size: 10px; opacity: .75; margin-top: 2px; }
+    .td-total.bueno .tot-val { color: #155724; }
+    .td-total.medio .tot-val { color: #856404; }
+    .td-total.malo  .tot-val { color: #721c24; }
+
+    .td-del { width: 28px; text-align: center; }
+    .btn-del {
+      background: none; border: none; color: #dc3545;
+      cursor: pointer; font-size: 15px; line-height: 1;
+      padding: 1px 5px; border-radius: 3px;
+    }
+    .btn-del:hover { background: #fce8ea; }
+
+    .punt-adj { display: flex; align-items: center; gap: 3px; justify-content: center; margin-top: 6px; flex-wrap: wrap; }
+    .adj-lbl  { font-size: 9px; color: #94a3b8; }
+    .inp-adj  { width: 52px; text-align: center; font-size: 11px; border: 1px solid #c5d5e8; border-radius: 3px; padding: 2px 4px; background: rgba(255,255,255,.85); -moz-appearance: textfield; appearance: textfield; }
+    .inp-adj::-webkit-inner-spin-button { display: none; }
+    .inp-adj.active { border-color: #f59e0b; background: #fffbeb; }
+    .btn-adj-reset { background: none; border: none; font-size: 10px; color: #f59e0b; cursor: pointer; padding: 0; }
+    .btn-adj-reset:hover { color: #d97706; text-decoration: underline; }
+    .override-badge { font-size: 9px; color: #92400e; background: #fef3c7; padding: 1px 5px; border-radius: 3px; margin-top: 3px; }
+
+    .row-actions { padding: 6px 18px 14px; }
+    .btn-add {
+      background: rgba(var(--area-color-rgb), .07);
+      color: var(--area-color);
+      border: 1px dashed rgba(var(--area-color-rgb), .45);
+      border-radius: 6px;
+      padding: 6px 16px; font-size: 12px;
+      cursor: pointer; font-family: inherit;
+    }
+    .btn-add:hover { background: rgba(var(--area-color-rgb), .15); }
+  </style>
+</head>
+<body>
+
+  <div class="ind-header">
+    <span class="ind-num">Ítem 1</span>
+    <span class="ind-title">Cumplimiento rentabilidad de los contratos</span>
+    <span class="ind-peso">Peso: 25</span>
+  </div>
+
+  <div class="periodo-bar">
+    Período: <span class="periodo-tag" id="periodoTag">—</span>
+  </div>
+
+  <div class="nota-anual">ℹ️ Descripción y Meta son valores anuales. Rentabilidad se calcula automáticamente — se puede editar si es necesario.</div>
+
+  <div class="tbl-wrap">
+    <table class="ind-tabla" id="tabla"></table>
+  </div>
+
+  <div class="row-actions">
+    <button class="btn-add" onclick="addRow()">+ Agregar contrato</button>
+  </div>
+
+  <script>
+    // ── Período ──────────────────────────────────────────────────────────────
+    const params  = new URLSearchParams(location.search);
+    const ANIO    = parseInt(params.get('anio')) || new Date().getFullYear();
+    const MES     = parseInt(params.get('mes'))  || (new Date().getMonth() + 1);
+    const MES_PAD = String(MES).padStart(2, '0');
+    const PESO    = 25;
+
+    const MESES_NOM = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                       'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    document.getElementById('periodoTag').textContent = `${MESES_NOM[MES - 1]} ${ANIO}`;
+
+    // ── Claves localStorage ──────────────────────────────────────────────────
+    const CFG_KEY = `ind1_config_${ANIO}`;
+    const DAT_KEY = `ind1_data_${ANIO}_${MES_PAD}`;
+    const OVR_KEY = `ind1_override_${ANIO}_${MES_PAD}`;
+    let puntajeOverride = null;
+
+    function saveOverride() {
+      if (puntajeOverride !== null) localStorage.setItem(OVR_KEY, puntajeOverride);
+      else localStorage.removeItem(OVR_KEY);
+    }
+    function onOverride() {
+      const el = document.getElementById('puntOverride');
+      let v = el.value !== '' ? parseFloat(el.value) : null;
+      if (v !== null) { if (v < 0) v = 0; if (v > PESO) { v = PESO; el.value = PESO; } }
+      puntajeOverride = v;
+      saveOverride(); updateOverrideUI(); refreshCalcs();
+    }
+    function resetOverride() {
+      puntajeOverride = null;
+      document.getElementById('puntOverride').value = '';
+      saveOverride(); updateOverrideUI(); refreshCalcs();
+    }
+    function updateOverrideUI() {
+      const el = document.getElementById('puntOverride');
+      const btn = document.getElementById('btnReset');
+      const badge = document.getElementById('overrideBadge');
+      if (!el) return;
+      const active = puntajeOverride !== null;
+      el.classList.toggle('active', active);
+      if (btn)   btn.style.display   = active ? 'inline' : 'none';
+      if (badge) badge.style.display = active ? 'block'  : 'none';
+    }
+
+    // ── Defaults ─────────────────────────────────────────────────────────────
+    const DEF_ROWS = [
+      { desc: 'Mtto',       meta: 11 },
+      { desc: 'Producción', meta: 18 },
+      { desc: 'ALS',        meta: 10 },
+      { desc: 'Hocol',      meta: 10 },
+    ];
+    const DEF_SOPORTE = 'Control de presupuesto, suministrado por líder contable';
+
+    // ── Estado ───────────────────────────────────────────────────────────────
+    // cfg: { rows:[{desc,meta}], soporte }
+    // dat: [{ingresos, costo, rentabilidad}]
+    //   rentabilidad: '' = auto-calc, number = manual override
+    let cfg, dat;
+
+    function loadAll() {
+      const sc = localStorage.getItem(CFG_KEY);
+      cfg = sc ? JSON.parse(sc) : { rows: DEF_ROWS.map(r => ({ ...r })), soporte: DEF_SOPORTE };
+
+      const sd = localStorage.getItem(DAT_KEY);
+      dat = sd ? JSON.parse(sd) : [];
+
+      while (dat.length < cfg.rows.length) dat.push({ ingresos: '', costo: '', rentabilidad: '' });
+      dat = dat.slice(0, cfg.rows.length).map(d => ({
+        ingresos:     d.ingresos     ?? '',
+        costo:        d.costo        ?? '',
+        rentabilidad: d.rentabilidad ?? '',
+      }));
+    }
+
+    function saveCfg() { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
+    function saveDat() { localStorage.setItem(DAT_KEY, JSON.stringify(dat)); }
+
+    // ── Formato moneda ────────────────────────────────────────────────────────
+    function parseMoney(s) {
+      return parseFloat(
+        String(s || '').replace(/\$\s*/g,'').replace(/\./g,'').replace(',','.').replace(/[^\d.-]/g,'')
+      ) || 0;
+    }
+    function fmtMoney(n) {
+      const num = Math.round(parseFloat(n) || 0);
+      return num ? '$ ' + num.toLocaleString('es-CO') : '';
+    }
+    function fmtCOP(n) {
+      const abs = Math.abs(Math.round(n)).toLocaleString('es-CO');
+      return (n < 0 ? '− $\u00a0' : '+ $\u00a0') + abs;
+    }
+    function fmtPct(v) {
+      return (Math.round((parseFloat(v) || 0) * 10) / 10).toFixed(1) + '%';
+    }
+    function esc(s) {
+      return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Handlers de inputs monetarios ────────────────────────────────────────
+    function focusMoney(el) {
+      const raw = parseMoney(el.value);
+      el.value = raw || '';
+    }
+    function blurMoney(el, i, field) {
+      const raw = parseMoney(el.value);
+      dat[i][field] = raw || '';
+      el.value = raw ? fmtMoney(raw) : '';
+      schedSave(); refreshCalcs();
+    }
+    function inputMoney(el, i, field) {
+      dat[i][field] = parseMoney(el.value) || '';
+      if (field === 'ingresos' || field === 'costo') autoRent(i);
+      schedSave(); refreshCalcs();
+    }
+
+    // ── Auto-calcular rentabilidad desde ingresos/costo ──────────────────────
+    function autoRent(i) {
+      const ing = parseFloat(dat[i].ingresos) || 0;
+      const cos = parseFloat(dat[i].costo)    || 0;
+      if (ing > 0) {
+        const rent = (ing - cos) / ing * 100;
+        dat[i].rentabilidad = Math.round(rent * 100) / 100;
+        // Actualizar el input si no está siendo editado por el usuario
+        const el = document.getElementById(`rent_${i}`);
+        if (el && document.activeElement !== el) {
+          el.value = dat[i].rentabilidad.toFixed(1);
+        }
+      }
+    }
+
+    // ── Handler de rentabilidad manual ──────────────────────────────────────
+    function onRent(i) {
+      const v = document.getElementById(`rent_${i}`).value;
+      dat[i].rentabilidad = v === '' ? '' : parseFloat(v) || 0;
+      schedSave(); refreshCalcs();
+    }
+
+    // ── Cálculo por fila ─────────────────────────────────────────────────────
+    function calcRow(i) {
+      const ing  = parseFloat(dat[i].ingresos) || 0;
+      const cos  = parseFloat(dat[i].costo)    || 0;
+      const diff = ing - cos;
+
+      let rent;
+      const stored = dat[i].rentabilidad;
+      if (stored !== '' && stored !== null && stored !== undefined) {
+        rent = parseFloat(stored);
+        if (isNaN(rent)) rent = ing > 0 ? (diff / ing * 100) : null;
+      } else {
+        rent = ing > 0 ? (diff / ing * 100) : null;
+      }
+
+      const meta   = parseFloat(cfg.rows[i].meta) || 0;
+      const cumple = rent !== null && rent >= meta;
+      return { ing, cos, diff, rent, cumple };
+    }
+
+    function calcTotal() {
+      const n = cfg.rows.length;
+      const ptsFila = PESO / n;
+      let ganado = 0;
+      for (let i = 0; i < n; i++) {
+        if (calcRow(i).cumple) ganado += ptsFila;
+      }
+      return { n, ptsFila, ganado };
+    }
+
+    // ── postMessage al padre ──────────────────────────────────────────────────
+    let postTimer;
+    function postReal() {
+      clearTimeout(postTimer);
+      postTimer = setTimeout(() => {
+        const { ganado } = calcTotal();
+        const eff  = puntajeOverride !== null ? puntajeOverride : ganado;
+      const real = Math.round((eff / PESO) * 1000) / 10; // 0–100
+        parent.postMessage({ type: 'setReal', id: '1', real, anio: ANIO, mes: MES }, '*');
+      }, 350);
+    }
+
+    // ── Render completo de tabla ──────────────────────────────────────────────
+    function renderTable() {
+      const { n, ptsFila, ganado } = calcTotal();
+      const pct      = (ganado / PESO) * 100;
+      const totClass = pct >= 80 ? 'bueno' : pct >= 60 ? 'medio' : 'malo';
+
+      let h = `<thead><tr>
+        <th>Fórmula</th>
+        <th>Meta ${ANIO} (%)</th>
+        <th>Descripción</th>
+        <th>Soporte a anexar</th>
+        <th>Ingresos totales</th>
+        <th>Costo servicios</th>
+        <th>Rentabilidad</th>
+        <th>Resultado</th>
+        <th>Pts.<br>fila</th>
+        <th>Puntaje<br>Máx</th>
+        <th>Puntaje<br>obtenido</th>
+        <th></th>
+      </tr></thead><tbody>`;
+
+      for (let i = 0; i < n; i++) {
+        const { ing, diff, rent, cumple } = calcRow(i);
+        const rowCls = i % 2 === 0 ? 'row-even' : 'row-odd';
+        const rsCls  = cumple ? 'cumple' : 'no-cumple';
+        const pts    = cumple ? ptsFila : 0;
+        const rentVal = rent !== null ? rent.toFixed(1) : '';
+        const rentColor = rent !== null ? (cumple ? '#155724' : '#721c24') : '#9b9b9b';
+
+        h += `<tr class="${rowCls}">`;
+
+        // Fórmula (solo fila 0, rowspan)
+        if (i === 0) {
+          h += `<td class="td-formula" rowspan="${n}">
+            Ingresos totales − costo de los productos o servicios vendidos
+          </td>`;
+        }
+
+        // Meta anual
+        h += `<td style="text-align:center;white-space:nowrap">
+          <input class="inp-meta" type="number" id="meta_${i}"
+            value="${esc(cfg.rows[i].meta)}"
+            oninput="onMeta(${i})" min="0" max="100" step="0.1">&nbsp;%
+        </td>`;
+
+        // Descripción anual
+        h += `<td class="td-desc">
+          <input class="inp-desc" type="text" id="desc_${i}"
+            value="${esc(cfg.rows[i].desc)}"
+            oninput="onDesc(${i})">
+        </td>`;
+
+        // Soporte (solo fila 0, rowspan)
+        if (i === 0) {
+          h += `<td class="td-soporte" rowspan="${n}">
+            <textarea id="soporte" oninput="onSoporte()">${esc(cfg.soporte)}</textarea>
+          </td>`;
+        }
+
+        // Ingresos totales
+        h += `<td class="td-money">
+          <input class="inp-money" type="text" id="ing_${i}"
+            value="${esc(fmtMoney(dat[i].ingresos))}"
+            onfocus="focusMoney(this)"
+            onblur="blurMoney(this,${i},'ingresos')"
+            oninput="inputMoney(this,${i},'ingresos')"
+            placeholder="$ 0">
+        </td>`;
+
+        // Costo servicios
+        h += `<td class="td-money">
+          <input class="inp-money" type="text" id="cos_${i}"
+            value="${esc(fmtMoney(dat[i].costo))}"
+            onfocus="focusMoney(this)"
+            onblur="blurMoney(this,${i},'costo')"
+            oninput="inputMoney(this,${i},'costo')"
+            placeholder="$ 0">
+        </td>`;
+
+        // Rentabilidad (editable, auto-calculada)
+        h += `<td class="td-rent">
+          <input class="inp-rent" type="number" id="rent_${i}"
+            value="${rentVal}"
+            oninput="onRent(${i})"
+            style="color:${rentColor}"
+            placeholder="—" step="0.1">&nbsp;%
+        </td>`;
+
+        // Resultado
+        h += `<td class="td-resultado ${rsCls}" id="resultado_${i}">
+          <div class="res-diff">${ing > 0 ? fmtCOP(diff) : '—'}</div>
+          <div class="res-label">${ing > 0 ? (cumple ? '✓ Cumple' : '✗ No cumple') : ''}</div>
+        </td>`;
+
+        // Pts por fila
+        h += `<td class="td-pts ${rsCls}" id="pts_${i}">
+          ${ing > 0 ? pts.toFixed(2) : '—'}
+        </td>`;
+
+        // Puntaje Máx (solo fila 0, rowspan)
+        if (i === 0) {
+          h += `<td class="td-peso-max" rowspan="${n}">${PESO}</td>`;
+        }
+
+        // Puntaje obtenido total (solo fila 0, rowspan)
+        if (i === 0) {
+          const effGanado = puntajeOverride !== null ? puntajeOverride : ganado;
+          const effClass  = puntajeOverride !== null
+            ? (puntajeOverride/PESO*100 >= 80 ? 'bueno' : puntajeOverride/PESO*100 >= 60 ? 'medio' : 'malo')
+            : totClass;
+          h += `<td class="td-total ${effClass}" rowspan="${n}" id="total_pts">
+            <div class="tot-val">${effGanado.toFixed(2)}</div>
+            <div class="tot-label">de ${PESO}</div>
+            <div class="punt-adj">
+              <span class="adj-lbl">Ajuste:</span>
+              <input type="number" id="puntOverride" class="inp-adj ${puntajeOverride !== null ? 'active' : ''}"
+                placeholder="auto" step="0.01" min="0" max="${PESO}"
+                value="${puntajeOverride !== null ? puntajeOverride : ''}" onchange="onOverride()">
+              <button class="btn-adj-reset" id="btnReset" onclick="resetOverride()"
+                style="display:${puntajeOverride !== null ? 'inline' : 'none'}">↺ auto</button>
+            </div>
+            <div class="override-badge" id="overrideBadge"
+              style="display:${puntajeOverride !== null ? 'block' : 'none'}">✎ Ajustado</div>
+          </td>`;
+        }
+
+        // Botón eliminar
+        h += `<td class="td-del">
+          ${n > 1 ? `<button class="btn-del" onclick="delRow(${i})" title="Eliminar fila">×</button>` : ''}
+        </td>`;
+
+        h += `</tr>`;
+      }
+
+      h += `</tbody>`;
+      document.getElementById('tabla').innerHTML = h;
+      postReal();
+    }
+
+    // ── Refrescar solo celdas calculadas (sin perder foco en inputs) ──────────
+    function refreshCalcs() {
+      const { n, ptsFila, ganado } = calcTotal();
+      const pct      = (ganado / PESO) * 100;
+      const totClass = pct >= 80 ? 'bueno' : pct >= 60 ? 'medio' : 'malo';
+
+      for (let i = 0; i < n; i++) {
+        const { ing, diff, rent, cumple } = calcRow(i);
+        const rsCls     = cumple ? 'cumple' : 'no-cumple';
+        const rentColor = rent !== null ? (cumple ? '#155724' : '#721c24') : '#9b9b9b';
+        const pts       = cumple ? ptsFila : 0;
+
+        // Actualizar color del input rentabilidad (si no está enfocado)
+        const elRent = document.getElementById(`rent_${i}`);
+        if (elRent && document.activeElement !== elRent) {
+          elRent.style.color = rentColor;
+        }
+
+        const elRes = document.getElementById(`resultado_${i}`);
+        if (elRes) {
+          elRes.className = `td-resultado ${rsCls}`;
+          elRes.innerHTML = `<div class="res-diff">${ing > 0 ? fmtCOP(diff) : '—'}</div>
+            <div class="res-label">${ing > 0 ? (cumple ? '✓ Cumple' : '✗ No cumple') : ''}</div>`;
+        }
+
+        const elPts = document.getElementById(`pts_${i}`);
+        if (elPts) {
+          elPts.className   = `td-pts ${rsCls}`;
+          elPts.textContent = ing > 0 ? pts.toFixed(2) : '—';
+        }
+      }
+
+      const elTot = document.getElementById('total_pts');
+      if (elTot) {
+        const eff = puntajeOverride !== null ? puntajeOverride : ganado;
+        const effPct = (eff / PESO) * 100;
+        elTot.className = `td-total ${effPct >= 80 ? 'bueno' : effPct >= 60 ? 'medio' : 'malo'}`;
+        const valEl = elTot.querySelector('.tot-val');
+        if (valEl) valEl.textContent = eff.toFixed(2);
+      }
+
+      postReal();
+    }
+
+    // ── Handlers ─────────────────────────────────────────────────────────────
+    let saveTimer;
+    function schedSave() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => { saveCfg(); saveDat(); }, 600);
+    }
+
+    function onMeta(i) {
+      cfg.rows[i].meta = parseFloat(document.getElementById(`meta_${i}`).value) || 0;
+      schedSave(); refreshCalcs();
+    }
+    function onDesc(i) {
+      cfg.rows[i].desc = document.getElementById(`desc_${i}`).value;
+      schedSave();
+    }
+    function onSoporte() {
+      cfg.soporte = document.getElementById('soporte').value;
+      schedSave();
+    }
+
+    // ── Agregar / eliminar filas ──────────────────────────────────────────────
+    function addRow() {
+      cfg.rows.push({ desc: 'Nuevo', meta: 0 });
+      dat.push({ ingresos: '', costo: '', rentabilidad: '' });
+      saveCfg(); saveDat();
+      renderTable();
+    }
+
+    function delRow(i) {
+      if (cfg.rows.length <= 1) return;
+      cfg.rows.splice(i, 1);
+      dat.splice(i, 1);
+      saveCfg(); saveDat();
+      renderTable();
+    }
+
+    // ── Init ─────────────────────────────────────────────────────────────────
+    loadAll();
+    const _ov = localStorage.getItem(OVR_KEY);
+    puntajeOverride = _ov !== null ? parseFloat(_ov) : null;
+    renderTable();
+  </script>
+<script src="../../notas.js"></script></body>
+</html>
