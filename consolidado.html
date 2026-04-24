@@ -36,6 +36,185 @@
     .btn-export:hover  { background: #15803d; }
     .btn-export:disabled { background: #86efac; cursor: default; }
 
+    .btn-present {
+      background: #1a3a6b; color: #fff; border: none;
+      border-radius: 8px; padding: 6px 16px; font-size: 12px; font-weight: 700;
+      cursor: pointer; font-family: inherit; transition: background .15s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .btn-present:hover { background: #0d2550; }
+
+    /* ── MODO PRESENTACIÓN ─────────────────────────────────── */
+    #presentModal {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: #f0f4f8;
+      flex-direction: column;
+    }
+    #presentModal.open { display: flex; }
+
+    .pres-header {
+      background: linear-gradient(90deg, #0d2550 0%, #1a3a6b 60%, #1e5a9a 100%);
+      padding: 10px 24px; display: flex; align-items: center; gap: 14px;
+      border-bottom: 2px solid rgba(122,170,212,.25);
+      flex-shrink: 0;
+    }
+    .pres-logo {
+      width: 60px; height: 60px; background: white; border-radius: 50%; padding: 3px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .pres-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .pres-header-title { font-size: 13px; font-weight: 700; color: white; }
+    .pres-header-sub   { font-size: 10px; color: rgba(255,255,255,.6); margin-top: 1px; }
+    .pres-header-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .pres-slide-counter { font-size: 11px; color: rgba(255,255,255,.6); }
+
+    .pres-btn-close {
+      background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3);
+      color: white; border-radius: 6px; padding: 5px 12px;
+      font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
+      transition: background .15s;
+    }
+    .pres-btn-close:hover { background: rgba(255,255,255,.25); }
+
+    .pres-body {
+      flex: 1; overflow: hidden; display: flex; flex-direction: column;
+      padding: 0 24px;
+    }
+
+    .pres-slide {
+      display: none; flex-direction: column; height: 100%;
+      animation: slideIn .4s ease both;
+    }
+    .pres-slide.active { display: flex; }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .pres-area-banner {
+      padding: 12px 0 8px;
+      display: flex; align-items: center; gap: 12px;
+      border-bottom: 1px solid #e2e8f0;
+      flex-shrink: 0;
+    }
+    .pres-area-icon { font-size: 24px; }
+    .pres-area-name { font-size: 19px; font-weight: 800; color: #1e293b; }
+    .pres-area-period {
+      margin-left: auto; font-size: 11px; color: #64748b;
+      background: #e8eef6; padding: 3px 10px; border-radius: 12px;
+    }
+
+    /* Contenido principal: tabla+gráfica a la izquierda, aside a la derecha */
+    .pres-content {
+      flex: 1; overflow: hidden; display: flex; gap: 16px; padding: 12px 0 8px;
+      min-height: 0;
+    }
+
+    .pres-main {
+      flex: 1; overflow: auto; min-width: 0;
+      display: flex; flex-direction: column; gap: 0;
+    }
+
+    .pres-aside {
+      width: 240px; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px;
+      overflow: auto;
+    }
+
+    /* Tabla en modo presentación — mismos estilos que mes-tabla / tbl-anual */
+    .pres-table-wrap { overflow-x: auto; }
+    .pres-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .pres-tbl th {
+      background: #f8fafc; color: #374151; padding: 7px 10px; font-size: 10.5px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .4px;
+      border-bottom: 2px solid #e2e8f0; border-right: 1px solid #e8eef6;
+    }
+    .pres-tbl th.th-l { text-align: left; }
+    .pres-tbl th.th-c { text-align: center; }
+    .pres-tbl td {
+      border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9;
+      padding: 6px 10px; color: #1e293b;
+    }
+    .pres-tbl td.td-l { text-align: left; }
+    .pres-tbl td.td-c { text-align: center; }
+    .pres-tbl td.td-peso { text-align: center; font-weight: 700; color: #475569; }
+    .pres-tbl tr:last-child td { border-top: 2px solid #cbd5e0; background: #f0f4f8; font-weight: 700; }
+    /* Semáforo claro — igual que consolidado */
+    .pres-tbl .pc-v { background: #dcfce7; color: #15803d; font-weight: 700; text-align: center; }
+    .pres-tbl .pc-a { background: #fef9c3; color: #a16207; font-weight: 700; text-align: center; }
+    .pres-tbl .pc-r { background: #fee2e2; color: #b91c1c; font-weight: 700; text-align: center; }
+
+    /* Gráfica dentro del slide */
+    .pres-chart-wrap {
+      padding: 8px 0 4px; border-top: 1px solid #f1f5f9;
+      background: #fafbfc; flex-shrink: 0;
+    }
+    .pres-chart-title {
+      font-size: 10.5px; font-weight: 700; color: #64748b;
+      text-transform: uppercase; letter-spacing: .4px; margin-bottom: 6px; padding: 0 4px;
+    }
+    .pres-chart-canvas-wrap { position: relative; height: 220px; }
+
+    /* Panel consideraciones */
+    .pres-consider {
+      background: #fff; border: 1px solid #e8eef6;
+      border-radius: 10px; padding: 14px; flex-shrink: 0;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .pres-consider-title {
+      font-size: 10px; font-weight: 700; color: #1a3a6b;
+      text-transform: uppercase; letter-spacing: .8px; margin-bottom: 10px;
+    }
+    .pres-consider-body {
+      font-size: 11px; color: #374151; line-height: 1.65;
+    }
+
+    .pres-score-card {
+      background: #fff; border: 1px solid #e8eef6;
+      border-radius: 10px; padding: 14px; text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    }
+    .pres-score-num {
+      font-size: 38px; font-weight: 900; line-height: 1;
+    }
+    .pres-score-lbl { font-size: 10px; color: #64748b; margin-top: 4px; }
+    .pres-score-pct { font-size: 14px; font-weight: 700; margin-top: 6px; }
+
+    .pres-sem-list { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+    .pres-sem-item { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: #374151; }
+    .pres-sem-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Footer de navegación */
+    .pres-footer {
+      flex-shrink: 0; padding: 8px 0 12px;
+      display: flex; align-items: center; justify-content: center; gap: 16px;
+      border-top: 1px solid #e2e8f0;
+      background: #f0f4f8;
+    }
+    .pres-nav-btn {
+      background: #fff; border: 1px solid #e2e8f0;
+      color: #1e293b; border-radius: 8px; padding: 7px 22px; font-size: 12px;
+      font-weight: 700; cursor: pointer; font-family: inherit;
+      transition: background .15s; display: flex; align-items: center; gap: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,.07);
+    }
+    .pres-nav-btn:hover { background: #f8fafc; }
+    .pres-nav-btn:disabled { opacity: .3; cursor: default; }
+    .pres-progress-dots { display: flex; gap: 6px; align-items: center; }
+    .pres-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: #cbd5e0; transition: all .2s;
+      cursor: pointer;
+    }
+    .pres-dot.active { background: #1a3a6b; width: 18px; border-radius: 4px; }
+    .pres-autoplay-btn {
+      background: #fff; border: 1px solid #e2e8f0;
+      color: #1a3a6b; border-radius: 8px; padding: 7px 16px;
+      font-size: 11px; font-weight: 700; cursor: pointer; font-family: inherit;
+      transition: all .15s; box-shadow: 0 1px 3px rgba(0,0,0,.07);
+    }
+    .pres-autoplay-btn.on { background: #1a3a6b; color: white; }
+
     /* ── Chips de área ─────────────────────────────────────── */
     .areas-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(190px,1fr)); gap: 10px;
@@ -187,7 +366,30 @@
       <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></span>
       En vivo
     </span>
+    <button class="btn-present" onclick="openPresentation()">▶ Ver Presentación</button>
     <button class="btn-export" id="btnExport" onclick="exportExcel()">📥 Exportar Excel</button>
+  </div>
+
+  <!-- MODAL PRESENTACIÓN -->
+  <div id="presentModal">
+    <div class="pres-header">
+      <div class="pres-logo"><img src="assets/logo-icon.png" alt="SAS"></div>
+      <div>
+        <div class="pres-header-title">Sistema de Indicadores · Servicios Asociados S.A.S.</div>
+        <div class="pres-header-sub" id="presHeaderSub">Consolidado General</div>
+      </div>
+      <div class="pres-header-right">
+        <span class="pres-slide-counter" id="presCounter">Diapositiva 1 de 7</span>
+        <button class="pres-btn-close" onclick="closePresentation()">✕ Cerrar</button>
+      </div>
+    </div>
+    <div class="pres-body" id="presBody"></div>
+    <div class="pres-footer">
+      <button class="pres-nav-btn" id="presPrev" onclick="presNav(-1)">← Anterior</button>
+      <div class="pres-progress-dots" id="presDots"></div>
+      <button class="pres-autoplay-btn" id="presAutoBtn" onclick="toggleAutoplay()">⏵ Auto</button>
+      <button class="pres-nav-btn" id="presNext" onclick="presNav(1)">Siguiente →</button>
+    </div>
   </div>
 
   <div class="content" id="contenido"></div>
@@ -1195,6 +1397,534 @@ async function exportExcel() {
 
   btn.disabled = false; btn.innerHTML = '📥 Exportar Excel';
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   MODO PRESENTACIÓN
+═══════════════════════════════════════════════════════════════ */
+let presIdx = 0;
+let presAutoInterval = null;
+
+function getAreaPresData(area, anio, mes) {
+  const isAnio = vistaActual === 'anio';
+  const rows = [];
+  let totalPunt = 0, totalHas = false;
+  const pMax = area.indicadores.reduce((s,i)=>s+i.peso,0);
+  let verde = 0, amari = 0, rojo = 0, sinDatos = 0;
+
+  area.indicadores.forEach(ind => {
+    if (isAnio) {
+      let sum = 0, cnt = 0;
+      for (let m = 1; m <= 12; m++) {
+        const r = getReal(area, ind.id, anio, m);
+        if (r !== null) { sum += (r/100)*ind.peso; cnt++; }
+      }
+      const prom = cnt > 0 ? sum/cnt : null;
+      const promPct = prom !== null ? prom/ind.peso*100 : null;
+      if (promPct !== null) {
+        totalPunt += prom; totalHas = true;
+        if (promPct >= 80) verde++; else if (promPct >= 60) amari++; else rojo++;
+      } else sinDatos++;
+      rows.push({ label: ind.label, peso: ind.peso, punt: prom, pct: promPct });
+    } else {
+      const real = getReal(area, ind.id, anio, mes);
+      const punt = real !== null ? (real/100)*ind.peso : null;
+      if (punt !== null) { totalPunt += punt; totalHas = true; }
+      if (real !== null) {
+        if (real >= 80) verde++; else if (real >= 60) amari++; else rojo++;
+      } else sinDatos++;
+      rows.push({ label: ind.label, peso: ind.peso, punt, pct: real });
+    }
+  });
+
+  const totalPct = totalHas ? (totalPunt/pMax*100) : null;
+  return { rows, totalPunt: totalHas ? totalPunt : null, totalPct, pMax, verde, amari, rojo, sinDatos };
+}
+
+function getConsideraciones(area, data, anio, mes) {
+  const { totalPct, verde, amari, rojo, sinDatos, rows } = data;
+  const isAnio = vistaActual === 'anio';
+  const periodo = isAnio ? `el año ${anio}` : `${MESES_NOM[mes-1]} ${anio}`;
+
+  if (totalPct === null && sinDatos === rows.length)
+    return `No se han registrado datos para <strong>${area.nombre}</strong> en ${periodo}. Por favor ingrese los resultados de los indicadores para generar el análisis.`;
+
+  let txt = '';
+  if (totalPct !== null) {
+    if (totalPct >= 80)
+      txt = `<strong>${area.nombre}</strong> presenta un desempeño <strong style="color:#4ade80">excelente</strong> en ${periodo}, con un cumplimiento de <strong>${totalPct.toFixed(1)}%</strong> del puntaje máximo. `;
+    else if (totalPct >= 60)
+      txt = `<strong>${area.nombre}</strong> muestra un desempeño <strong style="color:#fbbf24">aceptable</strong> en ${periodo}, alcanzando un <strong>${totalPct.toFixed(1)}%</strong> del puntaje máximo. Se recomienda reforzar las áreas de mejora. `;
+    else
+      txt = `<strong>${area.nombre}</strong> requiere <strong style="color:#f87171">atención prioritaria</strong> en ${periodo}, con un cumplimiento de solo <strong>${totalPct.toFixed(1)}%</strong>. Es necesario implementar planes de mejora inmediatos. `;
+  }
+
+  if (verde > 0)
+    txt += `${verde} indicador${verde>1?'es':''} en verde (≥ 80%). `;
+  if (amari > 0)
+    txt += `${amari} en amarillo (60–79%), requieren seguimiento. `;
+  if (rojo > 0)
+    txt += `${rojo} en rojo (< 60%), con necesidad de acción inmediata. `;
+  if (sinDatos > 0)
+    txt += `${sinDatos} indicador${sinDatos>1?'es':''} sin datos registrados.`;
+
+  /* Indicador más bajo */
+  const conDatos = rows.filter(r => r.pct !== null);
+  if (conDatos.length > 0) {
+    const worst = conDatos.reduce((a,b) => a.pct < b.pct ? a : b);
+    if (worst.pct < 80) {
+      const short = worst.label.length > 48 ? worst.label.substring(0,47)+'…' : worst.label;
+      txt += `<br><br>Indicador con menor cumplimiento: <em>"${short}"</em> (${worst.pct.toFixed(0)}%).`;
+    }
+  }
+  return txt;
+}
+
+function buildPresSlide(area, anio, mes) {
+  const isAnio = vistaActual === 'anio';
+  const periodo = isAnio ? `Vista Anual ${anio}` : `${MESES_NOM[mes-1]} ${anio}`;
+
+  /* Tabla — reusar exactamente el mismo HTML del consolidado */
+  let tableHtml = '';
+  if (isAnio) {
+    tableHtml = renderTablaAnualPres(area, anio);
+  } else {
+    tableHtml = renderTablaMesPres(area, anio, mes);
+  }
+
+  /* Score card */
+  const data = getAreaPresData(area, anio, mes);
+  const scColor = data.totalPct === null ? '#94a3b8' : data.totalPct >= 80 ? '#15803d' : data.totalPct >= 60 ? '#a16207' : '#b91c1c';
+  const consider = getConsideraciones(area, data, anio, mes);
+
+  const chartLabel = isAnio
+    ? `Puntaje total mensual – ${anio}`
+    : `Puntaje por indicador – ${MESES_NOM[mes-1]} ${anio}`;
+
+  return `
+    <div class="pres-area-banner">
+      <span class="pres-area-icon">${area.icon}</span>
+      <span class="pres-area-name" style="color:${area.color}">${area.nombre}</span>
+      <span class="pres-area-period">${periodo}</span>
+    </div>
+    <div class="pres-content">
+      <div class="pres-main">
+        <div class="pres-table-wrap">${tableHtml}</div>
+        <div class="pres-chart-wrap">
+          <div class="pres-chart-title">${chartLabel}</div>
+          <div class="pres-chart-canvas-wrap">
+            <canvas id="pres_chart_${area.id}"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="pres-aside">
+        <div class="pres-score-card">
+          <div class="pres-score-num" style="color:${scColor}">${data.totalPunt !== null ? data.totalPunt.toFixed(1) : '—'}</div>
+          <div class="pres-score-lbl">Puntaje obtenido / ${data.pMax}</div>
+          <div class="pres-score-pct" style="color:${scColor}">${data.totalPct !== null ? data.totalPct.toFixed(1)+'%' : 'Sin datos'}</div>
+          <div class="pres-sem-list">
+            <div class="pres-sem-item"><span class="pres-sem-dot" style="background:#22c55e"></span>${data.verde} indicadores en verde</div>
+            <div class="pres-sem-item"><span class="pres-sem-dot" style="background:#eab308"></span>${data.amari} en amarillo</div>
+            <div class="pres-sem-item"><span class="pres-sem-dot" style="background:#ef4444"></span>${data.rojo} en rojo</div>
+            ${data.sinDatos > 0 ? `<div class="pres-sem-item"><span class="pres-sem-dot" style="background:#d1d5db"></span>${data.sinDatos} sin datos</div>` : ''}
+          </div>
+        </div>
+        <div class="pres-consider">
+          <div class="pres-consider-title">Consideraciones</div>
+          <div class="pres-consider-body">${consider}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* Tabla mensual para presentación — misma lógica que renderTablaMes */
+function renderTablaMesPres(area, anio, mes) {
+  let h = `<table class="pres-tbl" style="--block-rgb:${area.rgb}">
+    <thead><tr>
+      <th class="th-l">#</th><th class="th-l">Indicador</th>
+      <th class="th-c">Peso</th><th class="th-c">Puntaje</th><th class="th-c">Cumpl.&nbsp;%</th>
+    </tr></thead><tbody>`;
+
+  let totalPunt = 0, totalHas = false;
+  area.indicadores.forEach(ind => {
+    const real = getReal(area, ind.id, anio, mes);
+    const punt = real !== null ? (real/100)*ind.peso : null;
+    if (punt !== null) { totalPunt += punt; totalHas = true; }
+    const semCls = real === null ? 'dot-sin' : real >= 80 ? 'pc-v' : real >= 60 ? 'pc-a' : 'pc-r';
+    const semDot = real === null ? '<span class="sem-dot dot-sin"></span>'
+                 : real >= 80   ? '<span class="sem-dot dot-verde"></span>'
+                 : real >= 60   ? '<span class="sem-dot dot-amari"></span>'
+                                : '<span class="sem-dot dot-rojo"></span>';
+    h += `<tr>
+      <td class="td-l" style="font-weight:700;color:${area.color};width:32px">${ind.item}</td>
+      <td class="td-l">${ind.label}</td>
+      <td class="td-peso">${ind.peso}</td>
+      <td class="td-c" style="font-weight:700">${punt !== null ? punt.toFixed(2) : '—'}</td>
+      <td class="td-c">${semDot}${real !== null ? real.toFixed(1)+'%' : '—'}</td>
+    </tr>`;
+  });
+
+  const pMax   = area.indicadores.reduce((s,i)=>s+i.peso,0);
+  const totCls = totalHas ? (totalPunt/pMax*100 >= 80 ? 'c-tot-verde' : totalPunt/pMax*100 >= 60 ? 'c-tot-amari' : 'c-tot-rojo') : '';
+  h += `<tr>
+    <td colspan="2" class="td-l" style="text-align:right">TOTAL</td>
+    <td class="td-peso">${pMax}</td>
+    <td class="td-c ${totCls}" style="font-size:14px">${totalHas ? totalPunt.toFixed(2) : '—'}</td>
+    <td class="td-c ${totCls}">${totalHas ? (totalPunt/pMax*100).toFixed(1)+'%' : '—'}</td>
+  </tr></tbody></table>`;
+  return h;
+}
+
+/* Tabla anual para presentación — misma lógica que renderTablaAnual */
+function renderTablaAnualPres(area, anio) {
+  const rgb = area.rgb;
+  let h = `<div style="overflow-x:auto"><table class="pres-tbl" style="--block-rgb:${rgb}">
+    <thead><tr>
+      <th class="th-l" style="min-width:160px">Indicador</th>
+      <th class="th-c" style="min-width:42px">Peso</th>`;
+  for (let m = 1; m <= 12; m++) h += `<th class="th-c" style="min-width:50px">${MESES[m-1]}</th>`;
+  h += `<th class="th-c" style="border-left:2px solid #cbd5e0;min-width:50px">Prom.</th></tr></thead><tbody>`;
+
+  area.indicadores.forEach(ind => {
+    h += `<tr><td class="td-l"><span style="font-size:9px;font-weight:800;padding:1px 5px;border-radius:8px;background:rgba(${rgb},.12);color:rgba(${rgb},1);margin-right:4px">${ind.item}</span>${ind.label}</td>
+    <td class="td-peso">${ind.peso}</td>`;
+    let sum = 0, cnt = 0;
+    for (let m = 1; m <= 12; m++) {
+      const real = getReal(area, ind.id, anio, m);
+      if (real !== null) {
+        const punt   = (real/100)*ind.peso;
+        const semCls = real >= 80 ? 'pc-v' : real >= 60 ? 'pc-a' : 'pc-r';
+        h += `<td class="${semCls}"><div class="cell-data"><span class="cell-punt">${punt.toFixed(2)}</span><span class="cell-pct">${real.toFixed(0)}%</span></div></td>`;
+        sum += punt; cnt++;
+      } else {
+        h += `<td class="td-c"><span class="cell-empty">·</span></td>`;
+      }
+    }
+    const prom    = cnt > 0 ? sum/cnt : null;
+    const promPct = prom !== null ? prom/ind.peso*100 : null;
+    const promCls = promPct !== null ? (promPct >= 80 ? 'pc-v' : promPct >= 60 ? 'pc-a' : 'pc-r') : 'td-c';
+    h += `<td class="${promCls}" style="border-left:2px solid #cbd5e0">
+      ${prom !== null ? `<div class="cell-data"><span class="cell-punt">${prom.toFixed(2)}</span><span class="cell-pct">${promPct.toFixed(0)}%</span></div>` : '<span class="cell-empty">·</span>'}
+    </td></tr>`;
+  });
+
+  const pMax = area.indicadores.reduce((s,i)=>s+i.peso,0);
+  h += `<tr><td class="td-l" style="font-weight:700">TOTAL</td><td class="td-peso">${pMax}</td>`;
+  let totSum = 0, totCnt = 0;
+  for (let m = 1; m <= 12; m++) {
+    let mSum = 0, mHas = false;
+    area.indicadores.forEach(ind => {
+      const real = getReal(area, ind.id, anio, m);
+      if (real !== null) { mSum += (real/100)*ind.peso; mHas = true; }
+    });
+    if (mHas) {
+      const pct = mSum/pMax*100;
+      const cls = pct >= 80 ? 'c-tot-verde' : pct >= 60 ? 'c-tot-amari' : 'c-tot-rojo';
+      h += `<td class="td-c"><span class="cell-tot ${cls}">${mSum.toFixed(1)}</span></td>`;
+      totSum += mSum; totCnt++;
+    } else {
+      h += `<td class="td-c"><span class="cell-empty">·</span></td>`;
+    }
+  }
+  const totProm = totCnt > 0 ? totSum/totCnt : null;
+  const totCls  = totProm !== null ? (totProm/pMax*100 >= 80 ? 'c-tot-verde' : totProm/pMax*100 >= 60 ? 'c-tot-amari' : 'c-tot-rojo') : '';
+  h += `<td style="border-left:2px solid #cbd5e0;text-align:center">
+    ${totProm !== null ? `<span class="cell-tot ${totCls}">${totProm.toFixed(1)}</span>` : '<span class="cell-empty">·</span>'}
+  </td></tr>`;
+  h += `</tbody></table></div>`;
+  return h;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GRÁFICAS EN PRESENTACIÓN (mismo estilo que consolidado — tema claro)
+═══════════════════════════════════════════════════════════════ */
+const presChartInstances = {};
+
+function renderPresChart(area, anio, mes) {
+  const canvasId = `pres_chart_${area.id}`;
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  /* Destruir instancia previa si existe */
+  if (presChartInstances[area.id]) {
+    try { presChartInstances[area.id].destroy(); } catch(_) {}
+    delete presChartInstances[area.id];
+  }
+
+  const pMax = area.indicadores.reduce((s,i)=>s+i.peso, 0);
+
+  if (vistaActual === 'anio') {
+    const data = [], bgColor = [], bdColor = [];
+    for (let m = 1; m <= 12; m++) {
+      let mSum = 0, mHas = false;
+      area.indicadores.forEach(ind => {
+        const real = getReal(area, ind.id, anio, m);
+        if (real !== null) { mSum += (real/100)*ind.peso; mHas = true; }
+      });
+      if (mHas) {
+        const v = +mSum.toFixed(2), pct = v/pMax*100;
+        data.push(v); bgColor.push(semBg(pct)); bdColor.push(semBorder(pct));
+      } else {
+        data.push(null); bgColor.push('rgba(203,213,225,0.5)'); bdColor.push('#cbd5e0');
+      }
+    }
+    presChartInstances[area.id] = new Chart(canvas, {
+      type: 'bar',
+      plugins: window.ChartDataLabels ? [ChartDataLabels] : [],
+      data: {
+        labels: MESES,
+        datasets: [
+          {
+            label: 'Puntaje obtenido', data,
+            backgroundColor: bgColor, borderColor: bdColor,
+            borderWidth: 1.5, borderRadius: 6, borderSkipped: false,
+            datalabels: {
+              anchor: 'end', align: 'top',
+              formatter: v => v !== null ? v.toFixed(1) : '',
+              font: { size: 9.5, weight: '700' }, color: '#374151',
+              display: v => v !== null
+            }
+          },
+          {
+            label: `Máximo (${pMax})`, data: Array(12).fill(pMax),
+            type: 'line', borderColor: '#94a3b8', borderDash: [5,4],
+            borderWidth: 2, pointRadius: 0, fill: false,
+            datalabels: { display: false }
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'bottom', labels: { font: { size: 10.5 }, boxWidth: 14, padding: 12 } },
+          tooltip: {
+            backgroundColor: '#1e293b', titleFont: { size: 11 }, bodyFont: { size: 11 },
+            callbacks: {
+              title: ctx => MESES_NOM[ctx[0].dataIndex],
+              label: ctx => {
+                if (ctx.datasetIndex === 1) return `  Máximo: ${pMax} pts`;
+                const v = ctx.parsed.y;
+                if (v === null) return '  Sin datos';
+                return `  Puntaje: ${v.toFixed(2)} pts  (${(v/pMax*100).toFixed(0)}%)`;
+              }
+            }
+          },
+          datalabels: { display: false }
+        },
+        scales: {
+          y: {
+            beginAtZero: true, max: pMax * 1.12,
+            grid: { color: '#f1f5f9' },
+            ticks: { font: { size: 10 }, callback: v => v.toFixed(0) },
+            title: { display: true, text: 'Puntaje', font: { size: 10 }, color: '#94a3b8' }
+          },
+          x: { grid: { display: false }, ticks: { font: { size: 10.5, weight: '600' } } }
+        }
+      }
+    });
+  } else {
+    const labels = area.indicadores.map(ind => {
+      const s = ind.label.length > 32 ? ind.label.substring(0,31)+'…' : ind.label;
+      return `${ind.item}. ${s}`;
+    });
+    const puntos  = area.indicadores.map(ind => {
+      const real = getReal(area, ind.id, anio, mes);
+      return real !== null ? +(real/100*ind.peso).toFixed(2) : null;
+    });
+    const maximos = area.indicadores.map(ind => ind.peso);
+    const bgColors = puntos.map((p,i) => {
+      if (p === null) return 'rgba(203,213,225,0.4)';
+      return semBg(maximos[i] > 0 ? p/maximos[i]*100 : 0);
+    });
+    const bdColors = puntos.map((p,i) => {
+      if (p === null) return '#cbd5e0';
+      return semBorder(maximos[i] > 0 ? p/maximos[i]*100 : 0);
+    });
+    const fondo = puntos.map((p,i) => p !== null ? maximos[i]-p : maximos[i]);
+
+    presChartInstances[area.id] = new Chart(canvas, {
+      type: 'bar',
+      plugins: window.ChartDataLabels ? [ChartDataLabels] : [],
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Puntaje obtenido', data: puntos.map(p => p ?? 0),
+            backgroundColor: bgColors, borderColor: bdColors,
+            borderWidth: 1.5, borderRadius: { topRight: 4, bottomRight: 4 }, borderSkipped: 'left',
+            datalabels: {
+              anchor: 'end', align: 'right',
+              formatter: (v, ctx) => {
+                const ind = area.indicadores[ctx.dataIndex];
+                const pct = ind.peso > 0 ? v/ind.peso*100 : 0;
+                return puntos[ctx.dataIndex] !== null ? `${v.toFixed(1)} (${pct.toFixed(0)}%)` : '';
+              },
+              font: { size: 9.5, weight: '700' }, color: '#374151',
+              display: ctx => puntos[ctx.dataIndex] !== null
+            }
+          },
+          {
+            label: 'Peso máximo', data: fondo,
+            backgroundColor: 'rgba(241,245,249,0.9)', borderColor: '#e2e8f0',
+            borderWidth: 1, borderRadius: { topRight: 4, bottomRight: 4 }, borderSkipped: 'left',
+            datalabels: { display: false }
+          }
+        ]
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: true, position: 'bottom', labels: { font: { size: 10.5 }, boxWidth: 14, padding: 12 } },
+          tooltip: {
+            backgroundColor: '#1e293b', titleFont: { size: 11 }, bodyFont: { size: 11 },
+            callbacks: {
+              title: ctx => area.indicadores[ctx[0].dataIndex].label,
+              label: ctx => {
+                const ind = area.indicadores[ctx.dataIndex];
+                if (ctx.datasetIndex === 1) return `  Peso máximo: ${ind.peso} pts`;
+                const p = puntos[ctx.dataIndex];
+                if (p === null) return '  Sin datos registrados';
+                const pct = ind.peso > 0 ? p/ind.peso*100 : 0;
+                return `  Obtenido: ${p.toFixed(2)} pts  (${pct.toFixed(0)}%)`;
+              }
+            }
+          },
+          datalabels: { display: false }
+        },
+        scales: {
+          x: {
+            stacked: true, beginAtZero: true, max: Math.max(...maximos) + 1,
+            grid: { color: '#f1f5f9' },
+            ticks: { font: { size: 10 }, callback: v => v.toFixed(0) }
+          },
+          y: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+  }
+}
+
+function openPresentation() {
+  const modal = document.getElementById('presentModal');
+  const body  = document.getElementById('presBody');
+  const dots  = document.getElementById('presDots');
+  const anio  = +$anio();
+  const mes   = +$mes();
+
+  /* Construir diapositivas */
+  body.innerHTML = '';
+  dots.innerHTML = '';
+  AREAS.forEach((area, i) => {
+    const slide = document.createElement('div');
+    slide.className = 'pres-slide' + (i === 0 ? ' active' : '');
+    slide.innerHTML = buildPresSlide(area, anio, mes);
+    body.appendChild(slide);
+
+    const dot = document.createElement('div');
+    dot.className = 'pres-dot' + (i === 0 ? ' active' : '');
+    dot.title = area.nombre;
+    dot.onclick = () => goToSlide(i);
+    dots.appendChild(dot);
+  });
+
+  presIdx = 0;
+  updatePresUI();
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  /* Pantalla completa real */
+  const el = modal;
+  if (el.requestFullscreen) el.requestFullscreen();
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
+
+  /* Renderizar gráfica del primer slide */
+  setTimeout(() => renderPresChart(AREAS[0], anio, mes), 80);
+}
+
+function closePresentation() {
+  stopAutoplay();
+  document.getElementById('presentModal').classList.remove('open');
+  document.body.style.overflow = '';
+  /* Salir de pantalla completa si está activa */
+  if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement) {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+    else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+  }
+  /* Destruir charts de presentación */
+  Object.keys(presChartInstances).forEach(k => {
+    try { presChartInstances[k].destroy(); } catch(_) {}
+    delete presChartInstances[k];
+  });
+}
+
+function goToSlide(idx) {
+  const slides = document.querySelectorAll('.pres-slide');
+  const dots   = document.querySelectorAll('.pres-dot');
+  slides[presIdx].classList.remove('active');
+  dots[presIdx].classList.remove('active');
+  presIdx = idx;
+  slides[presIdx].classList.add('active');
+  dots[presIdx].classList.add('active');
+  updatePresUI();
+  /* Renderizar gráfica del slide activo */
+  setTimeout(() => renderPresChart(AREAS[presIdx], +$anio(), +$mes()), 60);
+}
+
+function presNav(dir) {
+  const total = AREAS.length;
+  const next = presIdx + dir;
+  if (next < 0 || next >= total) return;
+  goToSlide(next);
+}
+
+function updatePresUI() {
+  const total = AREAS.length;
+  document.getElementById('presCounter').textContent = `Diapositiva ${presIdx+1} de ${total}`;
+  document.getElementById('presHeaderSub').textContent = `${AREAS[presIdx].nombre} · ${vistaActual === 'anio' ? 'Año '+$anio() : MESES_NOM[+$mes()-1]+' '+$anio()}`;
+  document.getElementById('presPrev').disabled = presIdx === 0;
+  document.getElementById('presNext').disabled = presIdx === total - 1;
+}
+
+function toggleAutoplay() {
+  if (presAutoInterval) { stopAutoplay(); }
+  else {
+    document.getElementById('presAutoBtn').classList.add('on');
+    document.getElementById('presAutoBtn').textContent = '⏸ Pausar';
+    presAutoInterval = setInterval(() => {
+      if (presIdx < AREAS.length - 1) presNav(1);
+      else stopAutoplay();
+    }, 5000);
+  }
+}
+
+function stopAutoplay() {
+  if (presAutoInterval) { clearInterval(presAutoInterval); presAutoInterval = null; }
+  document.getElementById('presAutoBtn').classList.remove('on');
+  document.getElementById('presAutoBtn').textContent = '⏵ Auto';
+}
+
+/* Teclado para navegar */
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('presentModal').classList.contains('open')) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') presNav(1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   presNav(-1);
+  if (e.key === 'Escape') closePresentation();
+});
+
+/* Si el usuario sale de pantalla completa con el botón del navegador, cerramos el modal */
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) {
+    const modal = document.getElementById('presentModal');
+    if (modal.classList.contains('open')) closePresentation();
+  }
+});
+document.addEventListener('webkitfullscreenchange', () => {
+  if (!document.webkitFullscreenElement) {
+    const modal = document.getElementById('presentModal');
+    if (modal.classList.contains('open')) closePresentation();
+  }
+});
 
 /* ═══════════════════════════════════════════════════════════════
    INIT
