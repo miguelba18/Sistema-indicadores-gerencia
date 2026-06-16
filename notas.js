@@ -12,7 +12,13 @@
     .join('/')
     .replace(/\.html$/i, '');
 
-  const KEY = id => `_nota_${NS}_${id}`;
+  // Periodo del iframe (pasado como ?anio=...&mes=... por la página padre)
+  const _p  = new URLSearchParams(location.search);
+  const _anio = _p.get('anio') || String(new Date().getFullYear());
+  const _mes  = String(_p.get('mes') || (new Date().getMonth() + 1)).padStart(2, '0');
+  const PERIODO = `${_anio}_${_mes}`;
+
+  const KEY = id => `_nota_${NS}_${PERIODO}_${id}`;
   const get = id => localStorage.getItem(KEY(id)) || '';
   const set = (id, text) => {
     text = (text || '').trim();
